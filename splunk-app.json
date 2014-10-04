@@ -1,0 +1,1581 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "Splunk infrastructure provisioning across 2 AZs. Includes Search Heads, Peer Nodes, Cluster Master, License Master, Deployment Server, NFS appliance and supporting AWS infrastructure (SGs, ASGs, ELB) NOTE: Template will only run in us-west-1, us-west-2 and us-east-1",
+
+  "Parameters" : {
+
+    "AppKeyName": {
+      "Description" : "Name of an existing EC2 KeyPair to enable SSH access to the Splunk instances",
+      "Type": "String",
+      "MinLength": "1",
+      "MaxLength": "255",
+      "AllowedPattern" : "[\\x20-\\x7E]*",
+      "ConstraintDescription" : "can contain only ASCII characters."
+    },
+    "NFSKeyName": {
+      "Description" : "Name of an existing EC2 KeyPair to enable SSH access to the NFS appliance",
+      "Type": "String",
+      "MinLength": "1",
+      "MaxLength": "255",
+      "AllowedPattern" : "[\\x20-\\x7E]*",
+      "ConstraintDescription" : "can contain only ASCII characters."
+    },
+    "NFSImage" : {
+      "Description" : "Instance ID of the NFS Appliance",
+      "Type": "String",
+      "MinLength": "12",
+      "MaxLength": "12",
+      "ConstraintDescription": "must be a AMI ID in the form of ami-abcdefgh."
+    },
+    "NFSInstanceType" : {
+      "Description" : "Instance type for the NFS appliance",
+      "Type" : "String",
+      "Default" : "m3.medium",
+      "AllowedValues" : [ "m3.medium","m3.large","m3.xlarge","c3.large","c3.xlarge","c3.2xlarge","c3.4xlarge" ]
+    },
+    "NFSIPAddress" : {
+      "Description" : "NFS server static IP address for Search Head Pooling",
+      "Type" : "String",
+      "Default" :  "x.x.x.x"
+    },
+    "DeploymentServer1IPAddress" : {
+      "Description" : "Deployment server 1 static IP address",
+      "Type" : "String",
+      "Default" :  "x.x.x.x"
+    },
+    "SplunkSearchLoadBalancerSSLCert": {
+      "Description" : "Enter the ARN of the SSL server certficate from IAM",
+      "Type": "String"
+    },
+    "InternalCorporateCidrIp" : {
+      "Description" : "Corporate CidrIp (to restrict traffic to only the corporate IP space)",
+      "Type" : "String",
+      "Default" :  "10.0.0.0/8"
+    },
+    "InternetCorporateCidrIp" : {
+      "Description" : "Corporate CidrIp (to restrict traffic to only the corporate IP space)",
+      "Type" : "String",
+      "Default" :  "123.123.123.123/16"
+    },
+    "ForwardersCidrRange1" : {
+      "Description" : "IP space that is allowed to send data to the Splunk cluster",
+      "Type" : "String",
+      "Default" :  "10.0.0.0/8"
+    },
+    "ForwardersCidrRange2" : {
+      "Description" : "IP space that is allowed to send data to the Splunk cluster (If you don't need a 2nd range simply enter the same network as above)",
+      "Type" : "String",
+      "Default" :  "10.0.0.0/8"
+    },
+    "AppName" : {
+      "Description" : "What is the name of the application? This is used to tag the resources",
+      "Type": "String",
+      "MinLength": "3",
+      "MaxLength": "25",
+      "ConstraintDescription": "must be a valid IP CIDR range of the form x.x.x.x/x."
+    },
+    "AvailabilityZone1" : {
+      "Description" : "Enter the name of an availability zone available for Splunk",
+      "Type": "String",
+      "MinLength": "10",
+      "MaxLength": "10",
+      "ConstraintDescription": "must be in a valid AZ form, etc us-east-1b or us-west-1c"
+    },
+    "AvailabilityZone2" : {
+      "Description" : "Enter the name of a 2nd availability zone available for Splunk",
+      "Type": "String",
+      "MinLength": "10",
+      "MaxLength": "10",
+      "ConstraintDescription": "must be in a valid AZ form, etc us-east-1b or us-west-1c"
+    },
+    "S3ELBLoggingBucket" : {
+      "Description" : "Name of S3 bucket for sending ELB logs. NOTE: This bucket MUST be in the same region as ELB",
+      "Type": "String",
+      "MinLength": "3",
+      "MaxLength": "30",
+      "ConstraintDescription": "Must be a text input"
+    },
+    "EnvironmentName" : {
+      "Description" : "What is the environment type, e.g. prd/stg/dev/tst/uat/poc.",
+      "Type": "String",
+      "MinLength": "3",
+      "MaxLength": "5",
+      "ConstraintDescription": "must me be up to 5 characters."
+    },
+    "ManagementSG" : {
+      "Description" : "Management Security Group ID",
+      "Type" : "String",
+      "MinLength": "3",
+      "MaxLength": "30",
+      "ConstraintDescription": "Must be a text input"
+    },
+    "ApplicationSubnetAZ1" : {
+      "Description" : "Subnet ID for the Application subnet in AZ1",
+      "Type" : "String",
+      "MinLength": "15",
+      "MaxLength": "15",
+      "ConstraintDescription": "Must be a valid subnet ID of the VPC where you're building this application in the form of subnet-abcdefgh"
+    },
+    "ApplicationSubnetAZ2" : {
+      "Description" : "Subnet ID for the Application subnet in AZ2",
+      "Type" : "String",
+      "MinLength": "15",
+      "MaxLength": "15",
+      "ConstraintDescription": "Must be a valid subnet ID of the VPC where you're building this application in the form of subnet-abcdefgh"
+    },
+    "PresentationSubnetAZ1" : {
+      "Description" : "Subnet ID for the Presentation subnet in AZ1",
+      "Type" : "String",
+      "MinLength": "15",
+      "MaxLength": "15",
+      "ConstraintDescription": "Must be a valid subnet ID of the VPC where you're building this application in the form of subnet-abcdefgh"
+    },
+    "PresentationSubnetAZ2" : {
+      "Description" : "Subnet ID for the Presentation subnet in AZ2",
+      "Type" : "String",
+      "MinLength": "15",
+      "MaxLength": "15",
+      "ConstraintDescription": "Must be a valid subnet ID of the VPC where you're building this application in the form of subnet-abcdefgh"
+    },
+    "SearchHeadLBSubnetAZ1" : {
+      "Description" : "Subnet ID for the Search Head subnet in AZ1",
+      "Type" : "String",
+      "MinLength": "15",
+      "MaxLength": "15",
+      "ConstraintDescription": "Must be a valid subnet ID of the VPC where you're building this application in the form of subnet-abcdefgh"
+    },
+    "SearchHeadLBSubnetAZ2" : {
+      "Description" : "Subnet ID for the Search Head subnet in AZ2",
+      "Type" : "String",
+      "MinLength": "15",
+      "MaxLength": "15",
+      "ConstraintDescription": "Must be a valid subnet ID of the VPC where you're building this application in the form of subnet-abcdefgh"
+    },
+    "IntermediateForwarderSubnetAZ1" : {
+      "Description" : "Subnet ID for the Intermediate Forwarder subnet in AZ1",
+      "Type" : "String",
+      "MinLength": "15",
+      "MaxLength": "15",
+      "ConstraintDescription": "Must be a valid subnet ID of the VPC where you're building this application in the form of subnet-abcdefgh"
+    },
+    "IntermediateForwarderSubnetAZ2" : {
+      "Description" : "Subnet ID for the Intermediate Forwarder subnet in AZ2",
+      "Type" : "String",
+      "MinLength": "15",
+      "MaxLength": "15",
+      "ConstraintDescription": "Must be a valid subnet ID of the VPC where you're building this application in the form of subnet-abcdefgh"
+    },
+    "VPCID" : {
+      "Description" : "VPC ID",
+      "Type" : "String",
+      "MinLength": "12",
+      "MaxLength": "12",
+      "ConstraintDescription": "Must be the VPC ID of the VPC where you're building this application in the form of vpc-abcdefgh"
+    },
+    "BastionInstanceType" : {
+      "Description" : "Instance type for Bastion instance",
+      "Type" : "String",
+      "Default" : "t2.micro",
+      "AllowedValues" : [ "t2.micro","t2.small","t2.medium" ]
+    },
+    "SearchHeadInstanceType" : {
+      "Description" : "Instance type for Search Heads",
+      "Type" : "String",
+      "Default" : "m3.medium",
+      "AllowedValues" : [ "m3.medium","m3.large","m3.xlarge","c3.large","c3.xlarge","c3.2xlarge","c3.4xlarge" ]
+    },
+    "ClusterMasterInstanceType" : {
+      "Description" : "Instance type for Cluster Master",
+      "Type" : "String",
+      "Default" : "m3.medium",
+      "AllowedValues" : [ "m3.medium","m3.large","m3.xlarge","m3.2xlarge" ]
+    },
+    "LicenseMasterInstanceType" : {
+      "Description" : "Instance type for License Master",
+      "Type" : "String",
+      "Default" : "t2.medium",
+      "AllowedValues" : [ "t2.small","t2.medium","m3.medium","m3.large","m3.xlarge","m3.2xlarge" ]
+    },
+    "PeerNodeInstanceType" : {
+      "Description" : "Instance type for Peer Nodes",
+      "Type" : "String",
+      "Default" : "m3.medium",
+      "AllowedValues" : [ "m3.medium","m3.large","m3.xlarge","c3.large","c3.xlarge","c3.2xlarge","c3.4xlarge","i2.xlarge","i2.2xlarge","i2.4xlarge","i2.8xlarge" ]
+    },
+    "DeploymentServerInstanceType" : {
+      "Description" : "Instance type for Deployment Server",
+      "Type" : "String",
+      "Default" : "m3.medium",
+      "AllowedValues" : [ "m3.medium","m3.large","m3.xlarge","m3.2xlarge" ]
+    },
+    "IntermediateForwarderInstanceType" : {
+      "Description" : "Instance type for Intermediate Forwarder",
+      "Type" : "String",
+      "Default" : "m3.medium",
+      "AllowedValues" : [ "t2.small","t2.medium","m3.medium","m3.large","m3.xlarge","m3.2xlarge" ]
+    },
+    "S3ELBBucketPrefix" : {
+      "Description" : "Prefix for ELB logs stored in S3",
+      "Type" : "String"
+    },
+    "InternalConfigsBucketLocation" : {
+      "Description" : "The name of the S3 bucket containing the Splunk configuration files",
+      "Type" : "String"
+    },
+    "InternetConfigsBucketLocation" : {
+      "Description" : "The name of the S3 bucket containing the Splunk configuration files",
+      "Type" : "String"
+    },
+    "ClusterMasterVolumeSize" : {
+      "Description" : "Size of the EBS volume that stores Splunk peer node apps and TAs.",
+      "Type" : "Number",
+      "Default" : "10",
+      "MinValue" : "10",
+      "MaxValue" : "1024",
+      "ConstraintDescription" : "Must be a number between 10 and 1024"
+    },
+    "DeploymentInstance1VolumeSize" : {
+      "Description" : "Size of the EBS volume that stores Splunk apps that are deployed to all forwarders. This volume size will be created in each node",
+      "Type" : "Number",
+      "Default" : "50",
+      "MinValue" : "10",
+      "MaxValue" : "1024",
+      "ConstraintDescription" : "Must be a number between 10 and 1024"
+    }
+
+  },
+
+  "Mappings" : {
+    "AWSInstanceType2Arch" : {
+      "t2.micro"   : { "Arch" : "64" },
+      "t2.small"   : { "Arch" : "64" },
+      "t2.medium"  : { "Arch" : "64" },
+      "m3.medium"  : { "Arch" : "64" },
+      "m3.large"  : { "Arch" : "64" },
+      "m3.xlarge"  : { "Arch" : "64" },
+      "m3.2xlarge"  : { "Arch" : "64" },
+      "c3.large"  : { "Arch" : "64" },
+      "c3.xlarge"  : { "Arch" : "64" },
+      "c3.2xlarge"  : { "Arch" : "64" },
+      "c3.4xlarge"  : { "Arch" : "64" },
+      "c3.8xlarge"  : { "Arch" : "64" },
+      "r3.large"  : { "Arch" : "64" },
+      "r3.xlarge"  : { "Arch" : "64" },
+      "r3.2xlarge"  : { "Arch" : "64" },
+      "r3.4xlarge"  : { "Arch" : "64" },
+      "r3.8xlarge"  : { "Arch" : "64" },
+      "i2.xlarge"  : { "Arch" : "64" },
+      "i2.2xlarge"  : { "Arch" : "64" },
+      "i2.4xlarge"  : { "Arch" : "64" },
+      "i2.8xlarge"  : { "Arch" : "64" },
+      "hs1.8xlarge"  : { "Arch" : "64" }
+    },
+    "SplunkPeerNodeAMI" : {
+      "us-west-2"      : {"HVM64" : "ami-383a5008"},
+      "us-west-1"      : {"HVM64" : "ami-5aba831f"},
+      "us-east-1"      : {"HVM64" : "ami-978d91fe"}
+    },
+    "AWSRegionArch2AMI" : {
+      "us-west-2"      : {"64" : "ami-383a5008"},
+      "us-west-1"      : {"64" : "ami-5aba831f"},
+      "us-east-1"      : {"64" : "ami-978d91fe"}
+    }
+  },
+
+  "Resources" : {
+
+    "SplunkSearchElasticLoadBalancer" : {
+      "Type" : "AWS::ElasticLoadBalancing::LoadBalancer",
+      "Properties" : {
+        "AccessLoggingPolicy" : {
+          "Enabled" : true,
+          "EmitInterval" : 5,
+          "S3BucketName" : { "Ref" : "S3ELBLoggingBucket" },
+          "S3BucketPrefix" : { "Ref" : "S3ELBBucketPrefix" }
+        },
+        "AppCookieStickinessPolicy" : [ {
+          "CookieName" : "session_id_8000",
+          "PolicyName" : "SplunkWebCookiePolicy"
+        } ],
+        "ConnectionDrainingPolicy" : { "Enabled" : true, "Timeout" : 300 },
+        "CrossZone" : true,
+        "HealthCheck" : {
+          "HealthyThreshold" : "5",
+          "Interval" : "30",
+           "Target" : "HTTPS:8000/en-US/account/login",
+           "Timeout" : "5",
+           "UnhealthyThreshold" : "2"
+        },
+        "LoadBalancerName" : "splunk-search",
+        "Listeners" : [ {
+          "InstancePort" : "8000",
+          "InstanceProtocol" : "HTTPS",
+          "LoadBalancerPort" : "443",
+          "Protocol" : "HTTPS",
+          "PolicyNames" : [ "SplunkWebCookiePolicy" ],
+          "SSLCertificateId" : { "Ref" : "SplunkSearchLoadBalancerSSLCert" }
+        } ],
+        "Scheme" : "internal",
+        "Subnets" : [{ "Ref" : "SearchHeadLBSubnetAZ1" }, { "Ref" : "SearchHeadLBSubnetAZ2" }],
+        "SecurityGroups" : [ { "Ref" : "SplunkSearchHeadLoadBalancerSG" } ],
+        "Instances" : [ { "Ref" : "SearchHeadInstance1" },{ "Ref" : "SearchHeadInstance2" } ]
+      }
+    },
+
+    "SearchHeadInstance1" : {
+      "Type" : "AWS::EC2::Instance",
+      "Properties" : {
+        "InstanceType" : { "Ref" : "SearchHeadInstanceType" },
+        "KeyName" : { "Ref" : "AppKeyName" },
+        "SubnetId" : { "Ref" : "PresentationSubnetAZ1" },
+        "ImageId"  : { "Fn::FindInMap" : [ "AWSRegionArch2AMI", { "Ref" : "AWS::Region" }, { "Fn::FindInMap" : [ "AWSInstanceType2Arch", { "Ref" : "SearchHeadInstanceType" }, "Arch" ] } ] },
+        "SecurityGroupIds" : [{ "Ref" : "SplunkInternalComponentsSG" }, { "Ref" : "SplunkSearchHeadSG" }],
+        "IamInstanceProfile": { "Ref": "SplunkInternalComponentsInstanceProfile" },
+        "BlockDeviceMappings" : [
+          {
+            "DeviceName" : "/dev/xvda",
+            "Ebs" : { "VolumeSize" : "10", "VolumeType":"gp2" }
+          },
+          {
+            "DeviceName" : "/dev/sdb",
+            "VirtualName" : "ephemeral0"
+          },
+          {
+            "DeviceName" : "/dev/sdc",
+            "VirtualName" : "ephemeral1"
+          }
+        ] ,
+        "Tags" : [
+          {
+            "Key" : "purpose",
+            "Value" : "Search Head"
+          },
+          {
+            "Key" : "stack",
+            "Value" : { "Ref" : "EnvironmentName" }
+          },
+          {
+            "Key" : "app",
+            "Value" : { "Ref" : "AppName" }
+          },
+          {
+            "Key" : "Name",
+            "Value" : "Splunk Search Head"
+          }
+        ]
+      }
+    },
+    "SearchHeadInstance2" : {
+      "Type" : "AWS::EC2::Instance",
+      "Properties" : {
+        "InstanceType" : { "Ref" : "SearchHeadInstanceType" },
+        "KeyName" : { "Ref" : "AppKeyName" },
+        "SubnetId" : { "Ref" : "PresentationSubnetAZ2" },
+        "ImageId"  : { "Fn::FindInMap" : [ "AWSRegionArch2AMI", { "Ref" : "AWS::Region" }, { "Fn::FindInMap" : [ "AWSInstanceType2Arch", { "Ref" : "SearchHeadInstanceType" }, "Arch" ] } ] },
+        "SecurityGroupIds" : [{ "Ref" : "SplunkInternalComponentsSG" }, { "Ref" : "SplunkSearchHeadSG" }],
+        "IamInstanceProfile": { "Ref": "SplunkInternalComponentsInstanceProfile" },
+        "BlockDeviceMappings" : [
+          {
+            "DeviceName" : "/dev/xvda",
+            "Ebs" : { "VolumeSize" : "10", "VolumeType":"gp2" }
+          },
+          {
+            "DeviceName" : "/dev/sdb",
+            "VirtualName" : "ephemeral0"
+          },
+          {
+            "DeviceName" : "/dev/sdc",
+            "VirtualName" : "ephemeral1"
+          }
+        ] ,
+        "Tags" : [
+          {
+            "Key" : "purpose",
+            "Value" : "Search Head"
+          },
+          {
+            "Key" : "stack",
+            "Value" : { "Ref" : "EnvironmentName" }
+          },
+          {
+            "Key" : "app",
+            "Value" : { "Ref" : "AppName" }
+          },
+          {
+            "Key" : "Name",
+            "Value" : "Splunk Search Head"
+          }
+        ]
+      }
+    },
+
+    "PeerNodeInstance1" : {
+      "Type" : "AWS::EC2::Instance",
+      "Properties" : {
+        "InstanceType" : { "Ref" : "PeerNodeInstanceType" },
+        "DisableApiTermination" : "true",
+        "KeyName" : { "Ref" : "AppKeyName" },
+        "SubnetId" : { "Ref" : "ApplicationSubnetAZ1" },
+        "ImageId" : { "Fn::FindInMap" : [ "SplunkPeerNodeAMI", { "Ref" : "AWS::Region" }, "HVM64" ]},
+        "SecurityGroupIds" : [{ "Ref" : "SplunkInternalComponentsSG" }, { "Ref" : "SplunkPeerNodeSG" }],
+        "IamInstanceProfile": { "Ref": "SplunkInternalComponentsInstanceProfile" },
+        "BlockDeviceMappings" : [
+          {
+            "DeviceName" : "/dev/xvda",
+            "Ebs" : { "VolumeSize" : "10", "VolumeType":"gp2" }
+          },
+          {
+            "DeviceName" : "/dev/xvdb",
+            "VirtualName" : "ephemeral0"
+          },
+          {
+            "DeviceName" : "/dev/xvdc",
+            "VirtualName" : "ephemeral1"
+          }
+        ],
+        "Tags" : [
+          {
+            "Key" : "purpose",
+            "Value" : "Peer Node"
+          },
+          {
+            "Key" : "stack",
+            "Value" : { "Ref" : "EnvironmentName" }
+          },
+          {
+            "Key" : "app",
+            "Value" : { "Ref" : "AppName" }
+          },
+          {
+            "Key" : "Name",
+            "Value" : "Splunk Peer Node"
+          }
+        ]
+      }
+    },
+
+    "PeerNodeInstance2" : {
+      "Type" : "AWS::EC2::Instance",
+      "Properties" : {
+        "InstanceType" : { "Ref" : "PeerNodeInstanceType" },
+        "DisableApiTermination" : "true",
+        "KeyName" : { "Ref" : "AppKeyName" },
+        "SubnetId" : { "Ref" : "ApplicationSubnetAZ2" },
+        "ImageId" : { "Fn::FindInMap" : [ "SplunkPeerNodeAMI", { "Ref" : "AWS::Region" }, "HVM64" ]},
+        "SecurityGroupIds" : [{ "Ref" : "SplunkInternalComponentsSG" }, { "Ref" : "SplunkPeerNodeSG" }],
+        "IamInstanceProfile": { "Ref": "SplunkInternalComponentsInstanceProfile" },
+        "BlockDeviceMappings" : [
+          {
+            "DeviceName" : "/dev/xvda",
+            "Ebs" : { "VolumeSize" : "10", "VolumeType":"gp2" }
+          },
+          {
+            "DeviceName" : "/dev/xvdb",
+            "VirtualName" : "ephemeral0"
+          },
+          {
+            "DeviceName" : "/dev/xvdc",
+            "VirtualName" : "ephemeral1"
+          }
+        ],
+        "Tags" : [
+          {
+            "Key" : "purpose",
+            "Value" : "Peer Node"
+          },
+          {
+            "Key" : "stack",
+            "Value" : { "Ref" : "EnvironmentName" }
+          },
+          {
+            "Key" : "app",
+            "Value" : { "Ref" : "AppName" }
+          },
+          {
+            "Key" : "Name",
+            "Value" : "Splunk Peer Node"
+          }
+        ]
+      }
+    },
+
+    "PeerNodeInstance3" : {
+      "Type" : "AWS::EC2::Instance",
+      "Properties" : {
+        "InstanceType" : { "Ref" : "PeerNodeInstanceType" },
+        "DisableApiTermination" : "true",
+        "KeyName" : { "Ref" : "AppKeyName" },
+        "SubnetId" : { "Ref" : "ApplicationSubnetAZ1" },
+        "ImageId" : { "Fn::FindInMap" : [ "SplunkPeerNodeAMI", { "Ref" : "AWS::Region" }, "HVM64" ]},
+        "SecurityGroupIds" : [{ "Ref" : "SplunkInternalComponentsSG" }, { "Ref" : "SplunkPeerNodeSG" }],
+        "IamInstanceProfile": { "Ref": "SplunkInternalComponentsInstanceProfile" },
+        "BlockDeviceMappings" : [
+          {
+            "DeviceName" : "/dev/xvda",
+            "Ebs" : { "VolumeSize" : "10", "VolumeType":"gp2" }
+          },
+          {
+            "DeviceName" : "/dev/xvdb",
+            "VirtualName" : "ephemeral0"
+          },
+          {
+            "DeviceName" : "/dev/xvdc",
+            "VirtualName" : "ephemeral1"
+          }
+        ],
+        "Tags" : [
+          {
+            "Key" : "purpose",
+            "Value" : "Peer Node"
+          },
+          {
+            "Key" : "stack",
+            "Value" : { "Ref" : "EnvironmentName" }
+          },
+          {
+            "Key" : "app",
+            "Value" : { "Ref" : "AppName" }
+          },
+          {
+            "Key" : "Name",
+            "Value" : "Splunk Peer Node"
+          }
+        ]
+      }
+    },
+
+    "PeerNodeInstance4" : {
+      "Type" : "AWS::EC2::Instance",
+      "Properties" : {
+        "InstanceType" : { "Ref" : "PeerNodeInstanceType" },
+        "DisableApiTermination" : "true",
+        "KeyName" : { "Ref" : "AppKeyName" },
+        "SubnetId" : { "Ref" : "ApplicationSubnetAZ2" },
+        "ImageId" : { "Fn::FindInMap" : [ "SplunkPeerNodeAMI", { "Ref" : "AWS::Region" }, "HVM64" ]},
+        "SecurityGroupIds" : [{ "Ref" : "SplunkInternalComponentsSG" }, { "Ref" : "SplunkPeerNodeSG" }],
+        "IamInstanceProfile": { "Ref": "SplunkInternalComponentsInstanceProfile" },
+        "BlockDeviceMappings" : [
+          {
+            "DeviceName" : "/dev/xvda",
+            "Ebs" : { "VolumeSize" : "10", "VolumeType":"gp2" }
+          },
+          {
+            "DeviceName" : "/dev/xvdb",
+            "VirtualName" : "ephemeral0"
+          },
+          {
+            "DeviceName" : "/dev/xvdc",
+            "VirtualName" : "ephemeral1"
+          }
+        ],
+        "Tags" : [
+          {
+            "Key" : "purpose",
+            "Value" : "Peer Node"
+          },
+          {
+            "Key" : "stack",
+            "Value" : { "Ref" : "EnvironmentName" }
+          },
+          {
+            "Key" : "app",
+            "Value" : { "Ref" : "AppName" }
+          },
+          {
+            "Key" : "Name",
+            "Value" : "Splunk Peer Node"
+          }
+        ]
+      }
+    },
+
+    "ClusterMasterInstance1" : {
+      "Type" : "AWS::EC2::Instance",
+      "Properties" : {
+        "InstanceType" : { "Ref" : "ClusterMasterInstanceType" },
+        "KeyName" : { "Ref" : "AppKeyName" },
+        "SubnetId" : { "Ref" : "ApplicationSubnetAZ1" },
+        "ImageId"  : { "Fn::FindInMap" : [ "AWSRegionArch2AMI", { "Ref" : "AWS::Region" }, { "Fn::FindInMap" : [ "AWSInstanceType2Arch", { "Ref" : "ClusterMasterInstanceType" }, "Arch" ] } ] },
+        "SecurityGroupIds" : [{ "Ref" : "SplunkInternalComponentsSG" }, { "Ref" : "SplunkMasterNodeSG" }],
+        "IamInstanceProfile": { "Ref": "SplunkInternalComponentsInstanceProfile" },
+        "BlockDeviceMappings" : [
+          {
+            "DeviceName" : "/dev/xvda",
+            "Ebs" : { "VolumeSize" : "10", "VolumeType":"gp2" }
+          },
+          {
+            "DeviceName" : "/dev/sdb",
+            "VirtualName" : "ephemeral0"
+          }
+        ],
+        "Tags" : [
+          {
+            "Key" : "purpose",
+            "Value" : "Cluster Master"
+          },
+          {
+            "Key" : "stack",
+            "Value" : { "Ref" : "EnvironmentName" }
+          },
+          {
+            "Key" : "app",
+            "Value" : { "Ref" : "AppName" }
+          },
+          {
+            "Key" : "Name",
+            "Value" : "Splunk Cluster Master"
+          }
+        ]
+      }
+    },
+
+    "IntermediateForwarderInstance1" : {
+      "Type" : "AWS::EC2::Instance",
+      "Properties" : {
+        "InstanceType" : { "Ref" : "IntermediateForwarderInstanceType" },
+        "KeyName" : { "Ref" : "AppKeyName" },
+        "SubnetId" : { "Ref" : "IntermediateForwarderSubnetAZ1" },
+        "ImageId"  : { "Fn::FindInMap" : [ "AWSRegionArch2AMI", { "Ref" : "AWS::Region" }, { "Fn::FindInMap" : [ "AWSInstanceType2Arch", { "Ref" : "IntermediateForwarderInstanceType" }, "Arch" ] } ] },
+        "SecurityGroupIds" : [{ "Ref" : "SplunkInternetComponentsSG" }, { "Ref" : "SplunkIntermediateForwarderSG" }],
+        "IamInstanceProfile": { "Ref": "SplunkInternetComponentsInstanceProfile" },
+        "BlockDeviceMappings" : [
+          {
+            "DeviceName" : "/dev/xvda",
+            "Ebs" : { "VolumeSize" : "10", "VolumeType":"gp2" }
+          },
+          {
+            "DeviceName" : "/dev/sdb",
+            "VirtualName" : "ephemeral0"
+          }
+        ],
+        "Tags" : [
+          {
+            "Key" : "purpose",
+            "Value" : "Intermediate Forwarder"
+          },
+          {
+            "Key" : "stack",
+            "Value" : { "Ref" : "EnvironmentName" }
+          },
+          {
+            "Key" : "app",
+            "Value" : { "Fn::Join" : [ "-", [ { "Ref" : "AppName" }, "IntermediateForwarders"] ] }
+          },
+          {
+            "Key" : "Name",
+            "Value" : "Splunk Intermediate Forwarder"
+          }
+        ]
+      }
+    },
+
+    "IntermediateForwarderInstance2" : {
+      "Type" : "AWS::EC2::Instance",
+      "Properties" : {
+        "InstanceType" : { "Ref" : "IntermediateForwarderInstanceType" },
+        "KeyName" : { "Ref" : "AppKeyName" },
+        "SubnetId" : { "Ref" : "IntermediateForwarderSubnetAZ2" },
+        "ImageId"  : { "Fn::FindInMap" : [ "AWSRegionArch2AMI", { "Ref" : "AWS::Region" }, { "Fn::FindInMap" : [ "AWSInstanceType2Arch", { "Ref" : "IntermediateForwarderInstanceType" }, "Arch" ] } ] },
+        "SecurityGroupIds" : [{ "Ref" : "SplunkInternetComponentsSG" }, { "Ref" : "SplunkIntermediateForwarderSG" }],
+        "IamInstanceProfile": { "Ref": "SplunkInternetComponentsInstanceProfile" },
+        "BlockDeviceMappings" : [
+          {
+            "DeviceName" : "/dev/xvda",
+            "Ebs" : { "VolumeSize" : "10", "VolumeType":"gp2" }
+          },
+          {
+            "DeviceName" : "/dev/sdb",
+            "VirtualName" : "ephemeral0"
+          }
+        ],
+        "Tags" : [
+          {
+            "Key" : "purpose",
+            "Value" : "Intermediate Forwarder"
+          },
+          {
+            "Key" : "stack",
+            "Value" : { "Ref" : "EnvironmentName" }
+          },
+          {
+            "Key" : "app",
+            "Value" : { "Fn::Join" : [ "-", [ { "Ref" : "AppName" }, "IntermediateForwarders"] ] }
+          },
+          {
+            "Key" : "Name",
+            "Value" : "Splunk Intermediate Forwarder"
+          }
+        ]
+      }
+    },
+
+    "LicenseMasterInstance1" : {
+      "Type" : "AWS::EC2::Instance",
+      "Properties" : {
+        "InstanceType" : { "Ref" : "LicenseMasterInstanceType" },
+        "KeyName" : { "Ref" : "AppKeyName" },
+        "SubnetId" : { "Ref" : "ApplicationSubnetAZ1" },
+        "ImageId"  : { "Fn::FindInMap" : [ "AWSRegionArch2AMI", { "Ref" : "AWS::Region" }, { "Fn::FindInMap" : [ "AWSInstanceType2Arch", { "Ref" : "LicenseMasterInstanceType" }, "Arch" ] } ] },
+        "SecurityGroupIds" : [{ "Ref" : "SplunkInternalComponentsSG" }, { "Ref" : "SplunkLicenseMasterSG" }],
+        "IamInstanceProfile": { "Ref": "SplunkInternalComponentsInstanceProfile" },
+        "BlockDeviceMappings" : [
+          {
+            "DeviceName" : "/dev/xvda",
+            "Ebs" : { "VolumeSize" : "10", "VolumeType":"gp2" }
+          },
+          {
+            "DeviceName" : "/dev/sdb",
+            "VirtualName" : "ephemeral0"
+          }
+        ],
+        "Tags" : [
+          {
+            "Key" : "purpose",
+            "Value" : "LicenseMaster"
+          },
+          {
+            "Key" : "stack",
+            "Value" : { "Ref" : "EnvironmentName" }
+          },
+          {
+            "Key" : "app",
+            "Value" : { "Ref" : "AppName" }
+          },
+          {
+            "Key" : "Name",
+            "Value" : "Splunk License Master"
+          }
+        ]
+      }
+    },
+
+    "DeploymentInstance1" : {
+      "Type" : "AWS::EC2::Instance",
+      "Properties" : {
+        "InstanceType" : { "Ref" : "DeploymentServerInstanceType" },
+        "KeyName" : { "Ref" : "AppKeyName" },
+        "SubnetId" : { "Ref" : "ApplicationSubnetAZ2" },
+        "ImageId"  : { "Fn::FindInMap" : [ "AWSRegionArch2AMI", { "Ref" : "AWS::Region" }, { "Fn::FindInMap" : [ "AWSInstanceType2Arch", { "Ref" : "DeploymentServerInstanceType" }, "Arch" ] } ] },
+        "SecurityGroupIds" : [{ "Ref" : "SplunkInternalComponentsSG" }, { "Ref" : "SplunkDeploymentSG" }],
+        "IamInstanceProfile": { "Ref": "SplunkInternalComponentsInstanceProfile" },
+        "PrivateIpAddress" : { "Ref" : "DeploymentServer1IPAddress" },
+        "BlockDeviceMappings" : [
+          {
+            "DeviceName" : "/dev/xvda",
+            "Ebs" : { "VolumeSize" : "10", "VolumeType":"gp2" }
+          },
+          {
+            "DeviceName" : "/dev/sdb",
+            "VirtualName" : "ephemeral0"
+          }
+        ],
+        "Tags" : [
+          {
+            "Key" : "purpose",
+            "Value" : "Deployment Server"
+          },
+          {
+            "Key" : "stack",
+            "Value" : { "Ref" : "EnvironmentName" }
+          },
+          {
+            "Key" : "app",
+            "Value" : { "Ref" : "AppName" }
+          },
+          {
+            "Key" : "Name",
+            "Value" : "Splunk Deployment Server"
+          }
+        ]
+      }
+    },
+
+    "DeploymentInstance1Volume1" : {
+      "Type" : "AWS::EC2::Volume",
+      "Properties" : {
+        "Size" : { "Ref" : "DeploymentInstance1VolumeSize" },
+        "VolumeType" : "gp2",
+        "AvailabilityZone" : { "Fn::GetAtt" : [ "DeploymentInstance1", "AvailabilityZone" ] },
+        "Tags" : [
+          {
+            "Key" : "purpose",
+            "Value" : "Deployment Instance 1 app storage"
+          },
+          {
+            "Key" : "stack",
+            "Value" : { "Ref" : "EnvironmentName" }
+          },
+          {
+            "Key" : "app",
+            "Value" : { "Ref" : "AppName" }
+          },
+          {
+            "Key" : "Name",
+            "Value" : "Splunk Deployment Server Apps"
+          }
+        ]
+      },
+      "DeletionPolicy" : "Snapshot"
+    },
+
+    "DeploymentInstance1Mount1" : {
+      "Type" : "AWS::EC2::VolumeAttachment",
+      "Properties" : {
+        "InstanceId" : { "Ref" : "DeploymentInstance1" },
+        "VolumeId"  : { "Ref" : "DeploymentInstance1Volume1" },
+        "Device" : "/dev/sdf"
+      }
+    },
+
+    "NFSInstance1" : {
+      "Type" : "AWS::EC2::Instance",
+      "Properties" : {
+        "InstanceType" : { "Ref" : "NFSInstanceType" },
+        "KeyName" : { "Ref" : "NFSKeyName" },
+        "SubnetId" : { "Ref" : "ApplicationSubnetAZ2" },
+        "ImageId"  : { "Ref" : "NFSImage" },
+        "SecurityGroupIds" : [{ "Ref" : "SplunkNFSSG" }],
+        "PrivateIpAddress" : { "Ref" : "NFSIPAddress" },
+        "Tags" : [
+          {
+            "Key" : "purpose",
+            "Value" : "NFS"
+          },
+          {
+            "Key" : "stack",
+            "Value" : { "Ref" : "EnvironmentName" }
+          },
+          {
+            "Key" : "app",
+            "Value" : { "Fn::Join" : [ "-", [ { "Ref" : "AppName" }, "NFS"] ] }
+          },
+          {
+            "Key" : "Name",
+            "Value" : "Splunk NFS"
+          }
+        ]
+      }
+    },
+
+    "NFSInstance1Volume1" : {
+      "Type" : "AWS::EC2::Volume",
+      "Properties" : {
+        "Size" : 50,
+        "VolumeType" : "gp2",
+        "AvailabilityZone" : { "Fn::GetAtt" : [ "NFSInstance1", "AvailabilityZone" ] },
+        "Tags" : [
+          {
+            "Key" : "purpose",
+            "Value" : "NFS SSD cache"
+          },
+          {
+            "Key" : "stack",
+            "Value" : { "Ref" : "EnvironmentName" }
+          },
+          {
+            "Key" : "app",
+            "Value" : { "Ref" : "AppName" }
+          },
+          {
+            "Key" : "Name",
+            "Value" : "Splunk SHP"
+          }
+        ]
+      },
+      "DeletionPolicy" : "Snapshot",
+      "DependsOn" : "NFSInstance1"
+    },
+
+    "NFSInstance1Mount1" : {
+      "Type" : "AWS::EC2::VolumeAttachment",
+      "Properties" : {
+        "InstanceId" : { "Ref" : "NFSInstance1" },
+        "VolumeId"  : { "Ref" : "NFSInstance1Volume1" },
+        "Device" : "/dev/sdf"
+      },
+      "DependsOn" : "NFSInstance1Volume1"
+    },
+
+    "NFSInstance1Volume2" : {
+      "Type" : "AWS::EC2::Volume",
+      "Properties" : {
+        "Size" : 50,
+        "VolumeType" : "gp2",
+        "AvailabilityZone" : { "Fn::GetAtt" : [ "NFSInstance1", "AvailabilityZone" ] },
+        "Tags" : [
+          {
+            "Key" : "purpose",
+            "Value" : "NFS SSD cache"
+          },
+          {
+            "Key" : "stack",
+            "Value" : { "Ref" : "EnvironmentName" }
+          },
+          {
+            "Key" : "app",
+            "Value" : { "Ref" : "AppName" }
+          },
+          {
+            "Key" : "Name",
+            "Value" : "Splunk SHP"
+          }
+        ]
+      },
+      "DeletionPolicy" : "Snapshot",
+      "DependsOn" : "NFSInstance1"
+    },
+
+    "NFSInstance1Mount2" : {
+      "Type" : "AWS::EC2::VolumeAttachment",
+      "Properties" : {
+        "InstanceId" : { "Ref" : "NFSInstance1" },
+        "VolumeId"  : { "Ref" : "NFSInstance1Volume2" },
+        "Device" : "/dev/sdg"
+      },
+      "DependsOn" : "NFSInstance1Volume2"
+    },
+
+    "SplunkInternalComponentsRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": { "Service": [ "ec2.amazonaws.com" ] },
+              "Action": [ "sts:AssumeRole" ]
+            }
+          ]
+        },
+        "Path": "/"
+      }
+    },
+    "SplunkInternalComponentsPolicies1": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyName": "S3-Configs",
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Action": ["s3:ListBucket" ],
+              "Resource": [{ "Fn::Join" : [ "", [ "arn:aws:s3:::", { "Ref" : "InternalConfigsBucketLocation" }] ] }]
+            },
+            {
+              "Effect": "Allow",
+              "Action": [ "s3:PutObject", "s3:GetObject"],
+              "Resource": [{ "Fn::Join" : [ "", [ "arn:aws:s3:::", { "Ref" : "InternalConfigsBucketLocation" }, "/*"] ] }]
+            }
+          ]
+        },
+        "Roles": [
+          {
+            "Ref": "SplunkInternalComponentsRole"
+          }
+        ]
+      }
+    },
+    "SplunkInternalComponentsPolicies2": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyName": "List-Account-Aliases",
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Action": [
+                "iam:ListAccountAliases"
+              ],
+              "Resource": [
+                "*"
+              ]
+            }
+          ]
+        },
+        "Roles": [
+          {
+            "Ref": "SplunkInternalComponentsRole"
+          }
+        ]
+      }
+    },
+    "SplunkInternalComponentsInstanceProfile": {
+      "Type": "AWS::IAM::InstanceProfile",
+      "Properties": {
+        "Path": "/",
+        "Roles": [
+          {
+            "Ref": "SplunkInternalComponentsRole"
+          }
+        ]
+      }
+    },
+
+    "SplunkInternetComponentsRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": { "Service": [ "ec2.amazonaws.com" ] },
+              "Action": [ "sts:AssumeRole" ]
+            }
+          ]
+        },
+        "Path": "/"
+      }
+    },
+    "SplunkInternetComponentsPolicies1": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyName": "S3-Configs",
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Action": ["s3:ListBucket" ],
+              "Resource": [{ "Fn::Join" : [ "", [ "arn:aws:s3:::", { "Ref" : "InternetConfigsBucketLocation" }] ] }]
+            },
+            {
+              "Effect": "Allow",
+              "Action": [ "s3:GetObject"],
+              "Resource": [{ "Fn::Join" : [ "", [ "arn:aws:s3:::", { "Ref" : "InternetConfigsBucketLocation" }, "/*"] ] }]
+            }
+          ]
+        },
+        "Roles": [
+          {
+            "Ref": "SplunkInternetComponentsRole"
+          }
+        ]
+      }
+    },
+    "SplunkInternetComponentsPolicies2": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyName": "List-Account-Aliases",
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Action": [
+                "iam:ListAccountAliases"
+              ],
+              "Resource": [
+                "*"
+              ]
+            }
+          ]
+        },
+        "Roles": [
+          {
+            "Ref": "SplunkInternetComponentsRole"
+          }
+        ]
+      }
+    },
+    "SplunkInternetComponentsInstanceProfile": {
+      "Type": "AWS::IAM::InstanceProfile",
+      "Properties": {
+        "Path": "/",
+        "Roles": [
+          {
+            "Ref": "SplunkInternetComponentsRole"
+          }
+        ]
+      }
+    },
+
+    "BastionRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": { "Service": [ "ec2.amazonaws.com" ] },
+              "Action": [ "sts:AssumeRole" ]
+            }
+          ]
+        },
+        "Path": "/"
+      }
+    },
+    "BastionPolicy1": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyName": "S3-ReadOnly-Configs",
+        "PolicyDocument": {
+          "Statement": [
+           {
+            "Effect": "Allow",
+            "Action": [ "s3:ListBucket" ],
+            "Resource": [{ "Fn::Join" : [ "", [ "arn:aws:s3:::", { "Ref" : "InternalConfigsBucketLocation" }] ] }]
+           },
+           {
+            "Effect": "Allow",
+            "Action": [ "s3:GetObject" ],
+            "Resource": [{ "Fn::Join" : [ "", [ "arn:aws:s3:::", { "Ref" : "InternalConfigsBucketLocation" }, "/*"] ] }]
+           }
+         ]
+        },
+        "Roles": [
+          {
+            "Ref": "BastionRole"
+          }
+        ]
+      }
+    },
+    "BastionPolicy2": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyName": "EC2-Full",
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "ec2:*",
+              "Effect": "Allow",
+              "Resource": "*"
+            },
+            {
+              "Effect": "Allow",
+              "Action": "elasticloadbalancing:*",
+              "Resource": "*"
+            },
+            {
+              "Effect": "Allow",
+              "Action": "cloudwatch:*",
+              "Resource": "*"
+            },
+            {
+              "Effect": "Allow",
+              "Action": "autoscaling:*",
+              "Resource": "*"
+            }
+          ]
+        },
+        "Roles": [
+          {
+            "Ref": "BastionRole"
+          }
+        ]
+      }
+    },
+    "BastionPolicy3": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyName": "List-Account-Aliases",
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Action": [
+                "iam:ListAccountAliases"
+              ],
+              "Resource": [
+                "*"
+              ]
+            }
+          ]
+        },
+        "Roles": [
+          {
+            "Ref": "BastionRole"
+          }
+        ]
+      }
+    },
+    "BastionInstanceProfile": {
+      "Type": "AWS::IAM::InstanceProfile",
+      "Properties": {
+        "Path": "/",
+        "Roles": [
+          {
+            "Ref": "BastionRole"
+          }
+        ]
+      }
+    },
+
+    "BastionInstance" : {
+      "Type" : "AWS::EC2::Instance",
+      "Metadata" : {
+        "Comment1" : "Install the latest software patches and security updates",
+        "AWS::CloudFormation::Init" : {
+          "config" : {
+            "commands" : {
+              "a1" : {
+                "command" : "/usr/bin/yum update -y"
+              }
+            }
+          }
+        }
+      },
+      "Properties" : {
+        "InstanceType" : { "Ref" : "BastionInstanceType" },
+        "DisableApiTermination" : "true",
+        "KeyName"  : { "Ref" : "AppKeyName" },
+        "SubnetId" : { "Ref" : "ApplicationSubnetAZ1" },
+        "BlockDeviceMappings" : [
+          {
+            "DeviceName" : "/dev/xvda",
+            "Ebs" : { "VolumeSize" : "10", "VolumeType":"gp2" }
+          }
+        ],
+        "ImageId" : {
+          "Fn::FindInMap" : [
+            "AWSRegionArch2AMI",
+            {
+              "Ref" : "AWS::Region"
+            },
+            {
+              "Fn::FindInMap" : [
+                "AWSInstanceType2Arch",
+                {
+                  "Ref" : "BastionInstanceType"
+                },
+                "Arch"
+              ]
+            }
+          ]
+        },
+        "UserData"       : { "Fn::Base64" : { "Fn::Join" : ["", [
+          "#!/bin/bash -v\n",
+          "yum update -y aws-cfn-bootstrap\n",
+
+          "# Helper function\n",
+          "function error_exit {\n",
+          "  echo $1\n",
+          "}\n",
+          "/opt/aws/bin/cfn-init -s ", { "Ref" : "AWS::StackName" }, " -r BastionInstance ",
+          "    --region ", { "Ref" : "AWS::Region" }, " || error_exit 'Failed to run cfn-init'\n",
+
+          "# Update latest security patches\n",
+          "yum update -y\n",
+
+          "# Install yum-cron-security\n",
+          "yum install yum-cron-security -y\n"
+          ]]}
+        },
+        "SecurityGroupIds" : [{ "Ref" : "ManagementSG" }],
+        "IamInstanceProfile": { "Ref": "BastionInstanceProfile" },
+        "Tags" : [
+          {
+            "Key" : "purpose",
+            "Value" : "Bastion"
+          },
+          {
+            "Key" : "stack",
+            "Value" : { "Ref" : "EnvironmentName" }
+          },
+          {
+            "Key" : "app",
+            "Value" : { "Fn::Join" : [ "-", [ { "Ref" : "AppName" }, "Bastion"] ] }
+          },
+          {
+            "Key" : "Name",
+            "Value" : "Splunk Bastion"
+          }
+        ]
+      }
+    },
+
+    "SplunkInternalComponentsSG" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPCID" },
+        "GroupDescription" : "Splunk internal components (search heads, peer nodes, master node, license master, NFS, deployment node)",
+        "SecurityGroupIngress" : [],
+        "Tags" : [
+          {
+            "Key" : "purpose",
+            "Value" : "Splunk Internal Components"
+          },
+          {
+            "Key" : "stack",
+            "Value" : { "Ref" : "EnvironmentName" }
+          },
+          {
+            "Key" : "app",
+            "Value" : { "Ref" : "AppName" }
+          }
+        ]
+      }
+    },
+
+    "SplunkInternetComponentsSG" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPCID" },
+        "GroupDescription" : "Splunk internet components (intermediate forwaders)",
+        "SecurityGroupIngress" : [],
+        "Tags" : [
+          {
+            "Key" : "purpose",
+            "Value" : "Splunk Internet Components"
+          },
+          {
+            "Key" : "stack",
+            "Value" : { "Ref" : "EnvironmentName" }
+          },
+          {
+            "Key" : "app",
+            "Value" : { "Ref" : "AppName" }
+          }
+        ]
+      }
+    },
+
+    "SplunkIntermediateForwarderSG" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "Splunk Intermediate Forwaders",
+        "VpcId" : {"Ref" : "VPCID"},
+        "SecurityGroupIngress" : [
+          { "IpProtocol" : "tcp", "FromPort" : "9997", "ToPort" : "9997", "CidrIp" : { "Ref" : "InternetCorporateCidrIp" } },
+          { "IpProtocol" : "tcp", "FromPort" : "22", "ToPort" : "22", "SourceSecurityGroupId" : { "Ref" : "ManagementSG" } },
+          { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "SourceSecurityGroupId" : { "Ref" : "ManagementSG" } }
+        ],
+        "Tags" : [
+          {
+            "Key" : "purpose",
+            "Value" : "Intermediate Forwaders"
+          },
+          {
+            "Key" : "stack",
+            "Value" : { "Ref" : "EnvironmentName" }
+          },
+          {
+            "Key" : "app",
+            "Value" : { "Ref" : "AppName" }
+          }
+        ]
+      }
+    },
+
+    "SplunkDeploymentSG" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "Splunk Deployment Servers",
+        "VpcId" : {"Ref" : "VPCID"},
+        "SecurityGroupIngress" : [
+          { "IpProtocol" : "tcp", "FromPort" : "8089", "ToPort" : "8089", "CidrIp" : { "Ref" : "ForwardersCidrRange1" } },
+          { "IpProtocol" : "tcp", "FromPort" : "8089", "ToPort" : "8089", "CidrIp" : { "Ref" : "ForwardersCidrRange2" } },
+          { "IpProtocol" : "tcp", "FromPort" : "8000", "ToPort" : "8000", "CidrIp" : { "Ref" : "InternalCorporateCidrIp" } },
+          { "IpProtocol" : "tcp", "FromPort" : "22", "ToPort" : "22", "SourceSecurityGroupId" : { "Ref" : "ManagementSG" } },
+          { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "SourceSecurityGroupId" : { "Ref" : "ManagementSG" } }
+        ],
+        "Tags" : [
+          {
+            "Key" : "purpose",
+            "Value" : "Splunk Deployment"
+          },
+          {
+            "Key" : "stack",
+            "Value" : { "Ref" : "EnvironmentName" }
+          },
+          {
+            "Key" : "app",
+            "Value" : { "Ref" : "AppName" }
+          }
+        ]
+      }
+    },
+
+    "SplunkNFSSG" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "NFS servers supporting Splunk instances",
+        "VpcId" : {"Ref" : "VPCID"},
+        "SecurityGroupIngress" : [
+          { "IpProtocol" : "tcp", "FromPort" : "443", "ToPort" : "443", "SourceSecurityGroupId" : { "Ref" : "ManagementSG" } },
+          { "IpProtocol" : "tcp", "FromPort" : "443", "ToPort" : "443", "CidrIp" : { "Ref" : "InternalCorporateCidrIp" } },
+          { "IpProtocol" : "tcp", "FromPort" : "2049", "ToPort" : "2049", "SourceSecurityGroupId" : { "Ref" : "SplunkSearchHeadSG" } },
+          { "IpProtocol" : "udp", "FromPort" : "2049", "ToPort" : "2049", "SourceSecurityGroupId" : { "Ref" : "SplunkSearchHeadSG" } },
+          { "IpProtocol" : "tcp", "FromPort" : "111", "ToPort" : "111", "SourceSecurityGroupId" : { "Ref" : "SplunkSearchHeadSG" } },
+          { "IpProtocol" : "udp", "FromPort" : "111", "ToPort" : "111", "SourceSecurityGroupId" : { "Ref" : "SplunkSearchHeadSG" } },
+          { "IpProtocol" : "udp", "FromPort" : "892", "ToPort" : "892", "SourceSecurityGroupId" : { "Ref" : "SplunkSearchHeadSG" } },
+          { "IpProtocol" : "tcp", "FromPort" : "892", "ToPort" : "892", "SourceSecurityGroupId" : { "Ref" : "SplunkSearchHeadSG" } },
+          { "IpProtocol" : "udp", "FromPort" : "662", "ToPort" : "662", "SourceSecurityGroupId" : { "Ref" : "SplunkSearchHeadSG" } },
+          { "IpProtocol" : "tcp", "FromPort" : "662", "ToPort" : "662", "SourceSecurityGroupId" : { "Ref" : "SplunkSearchHeadSG" } },
+          { "IpProtocol" : "udp", "FromPort" : "32803", "ToPort" : "32803", "SourceSecurityGroupId" : { "Ref" : "SplunkSearchHeadSG" } },
+          { "IpProtocol" : "udp", "FromPort" : "0", "ToPort" : "65535", "SourceSecurityGroupId" : { "Ref" : "SplunkSearchHeadSG" } },
+          { "IpProtocol" : "tcp", "FromPort" : "32803", "ToPort" : "32803", "SourceSecurityGroupId" : { "Ref" : "SplunkSearchHeadSG" } },
+          { "IpProtocol" : "tcp", "FromPort" : "22", "ToPort" : "22", "SourceSecurityGroupId" : { "Ref" : "ManagementSG" } },
+          { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "SourceSecurityGroupId" : { "Ref" : "ManagementSG" } }
+        ],
+        "Tags" : [
+          {
+            "Key" : "purpose",
+            "Value" : "NFS"
+          },
+          {
+            "Key" : "stack",
+            "Value" : { "Ref" : "EnvironmentName" }
+          },
+          {
+            "Key" : "app",
+            "Value" : { "Ref" : "AppName" }
+          }
+        ]
+      }
+    },
+
+    "SplunkLicenseMasterSG" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "Splunk License Master",
+        "VpcId" : {"Ref" : "VPCID"},
+        "SecurityGroupIngress" : [
+          { "IpProtocol" : "tcp", "FromPort" : "8089", "ToPort" : "8089", "SourceSecurityGroupId" : { "Ref" : "SplunkInternalComponentsSG" } },
+          { "IpProtocol" : "tcp", "FromPort" : "8000", "ToPort" : "8000", "CidrIp" : { "Ref" : "InternalCorporateCidrIp" } },
+          { "IpProtocol" : "tcp", "FromPort" : "22", "ToPort" : "22", "SourceSecurityGroupId" : { "Ref" : "ManagementSG" } },
+          { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "SourceSecurityGroupId" : { "Ref" : "ManagementSG" } }
+        ],
+        "Tags" : [
+          {
+            "Key" : "purpose",
+            "Value" : "License Master"
+          },
+          {
+            "Key" : "stack",
+            "Value" : { "Ref" : "EnvironmentName" }
+          },
+          {
+            "Key" : "app",
+            "Value" : { "Ref" : "AppName" }
+          }
+        ]
+      }
+    },
+
+    "SplunkMasterNodeSG" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "Splunk Cluster Master Node",
+        "VpcId" : {"Ref" : "VPCID"},
+        "SecurityGroupIngress" : [
+          { "IpProtocol" : "tcp", "FromPort" : "8089", "ToPort" : "8089", "SourceSecurityGroupId" : { "Ref" : "SplunkInternalComponentsSG" } },
+          { "IpProtocol" : "tcp", "FromPort" : "8000", "ToPort" : "8000", "CidrIp" : { "Ref" : "InternalCorporateCidrIp" } },
+          { "IpProtocol" : "tcp", "FromPort" : "22", "ToPort" : "22", "SourceSecurityGroupId" : { "Ref" : "ManagementSG" } },
+          { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "SourceSecurityGroupId" : { "Ref" : "ManagementSG" } }
+        ],
+        "Tags" : [
+          {
+            "Key" : "purpose",
+            "Value" : "Master Node"
+          },
+          {
+            "Key" : "stack",
+            "Value" : { "Ref" : "EnvironmentName" }
+          },
+          {
+            "Key" : "app",
+            "Value" : { "Ref" : "AppName" }
+          }
+        ]
+      }
+    },
+
+    "SplunkPeerNodeSG" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "Splunk Peer Nodes",
+        "VpcId" : {"Ref" : "VPCID"},
+        "SecurityGroupIngress" : [
+          { "IpProtocol" : "tcp", "FromPort" : "9997", "ToPort" : "9997", "CidrIp" : { "Ref" : "ForwardersCidrRange1" } },
+          { "IpProtocol" : "tcp", "FromPort" : "9997", "ToPort" : "9997", "CidrIp" : { "Ref" : "ForwardersCidrRange2" } },
+          { "IpProtocol" : "tcp", "FromPort" : "9997", "ToPort" : "9997", "SourceSecurityGroupId" : { "Ref" : "SplunkInternetComponentsSG" } },
+          { "IpProtocol" : "tcp", "FromPort" : "8089", "ToPort" : "8089", "SourceSecurityGroupId" : { "Ref" : "SplunkInternalComponentsSG" } },
+          { "IpProtocol" : "tcp", "FromPort" : "22", "ToPort" : "22", "SourceSecurityGroupId" : { "Ref" : "ManagementSG" } },
+          { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "SourceSecurityGroupId" : { "Ref" : "ManagementSG" } }
+        ],
+        "Tags" : [
+          {
+            "Key" : "purpose",
+            "Value" : "Cluster Peer Nodes"
+          },
+          {
+            "Key" : "stack",
+            "Value" : { "Ref" : "EnvironmentName" }
+          },
+          {
+            "Key" : "app",
+            "Value" : { "Ref" : "AppName" }
+          }
+        ]
+      }
+    },
+
+    "SplunkPeerNodeSGIngress": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "DependsOn": "SplunkPeerNodeSG",
+      "Properties": {
+        "GroupId": { "Ref": "SplunkPeerNodeSG" },
+        "IpProtocol": "tcp", "FromPort": "9887", "ToPort": "9887", "SourceSecurityGroupId": { "Ref": "SplunkPeerNodeSG" }
+      }
+    },
+
+    "SplunkSearchHeadSG" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "Splunk Search Heads",
+        "VpcId" : {"Ref" : "VPCID"},
+        "SecurityGroupIngress" : [
+          { "IpProtocol" : "tcp", "FromPort" : "22", "ToPort" : "22", "SourceSecurityGroupId" : { "Ref" : "ManagementSG" } },
+          { "IpProtocol" : "tcp", "FromPort" : "8000", "ToPort" : "8000", "SourceSecurityGroupId" : { "Ref" : "SplunkSearchHeadLoadBalancerSG" } },
+          { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "SourceSecurityGroupId" : { "Ref" : "ManagementSG" } }
+        ],
+        "Tags" : [
+          {
+            "Key" : "purpose",
+            "Value" : "Search Heads"
+          },
+          {
+            "Key" : "stack",
+            "Value" : { "Ref" : "EnvironmentName" }
+          },
+          {
+            "Key" : "app",
+            "Value" : { "Ref" : "AppName" }
+          }
+        ]
+      }
+    },
+
+    "SplunkSearchHeadLoadBalancerSG" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "Load Balancer(s) supporting Search Heads",
+        "VpcId" : {"Ref" : "VPCID"},
+        "SecurityGroupIngress" : [
+          { "IpProtocol" : "tcp", "FromPort" : "443", "ToPort" : "443", "CidrIp" : { "Ref" : "InternalCorporateCidrIp" } },
+          { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "SourceSecurityGroupId" : { "Ref" : "ManagementSG" } }
+        ],
+        "Tags" : [
+          {
+            "Key" : "purpose",
+            "Value" : "Search Head ELBs"
+          },
+          {
+            "Key" : "stack",
+            "Value" : { "Ref" : "EnvironmentName" }
+          },
+          {
+            "Key" : "app",
+            "Value" : { "Ref" : "AppName" }
+          }
+        ]
+      }
+    }
+
+  },
+
+  "Outputs" : {
+
+  }
+
+
+}
