@@ -319,7 +319,25 @@
         "Scheme" : "internal",
         "Subnets" : [{ "Ref" : "SearchHeadLBSubnetAZ1" }, { "Ref" : "SearchHeadLBSubnetAZ2" }],
         "SecurityGroups" : [ { "Ref" : "SplunkSearchHeadLoadBalancerSG" } ],
-        "Instances" : [ { "Ref" : "SearchHeadInstance1" },{ "Ref" : "SearchHeadInstance2" } ]
+        "Instances" : [ { "Ref" : "SearchHeadInstance1" },{ "Ref" : "SearchHeadInstance2" } ],
+        "Tags" : [
+          {
+            "Key" : "purpose",
+            "Value" : "Splunk Search"
+          },
+          {
+            "Key" : "stack",
+            "Value" : { "Ref" : "EnvironmentName" }
+          },
+          {
+            "Key" : "app",
+            "Value" : { "Ref" : "AppName" }
+          },
+          {
+            "Key" : "Name",
+            "Value" : "splunk-search"
+          }
+        ]
       }
     },
 
