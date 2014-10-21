@@ -223,6 +223,10 @@
       "Description" : "The name of the S3 bucket containing the Splunk configuration files",
       "Type" : "String"
     },
+    "SplunkSNSNotificationsARN" : {
+      "Description" : "ARN for the Splunk Notifications SNS topic",
+      "Type" : "String"
+    },
     "InternetConfigsBucketLocation" : {
       "Description" : "The name of the S3 bucket containing the Splunk configuration files",
       "Type" : "String"
@@ -384,6 +388,96 @@
         ]
       }
     },
+    "SearchHeadInstance1DiskUtilizationRoot": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Splunk Search Head Root Disk Utilization",
+        "MetricName": "DiskSpaceUtilization",
+        "Namespace": "System/Linux",
+        "Statistic": "Average",
+        "Period": "300",
+        "EvaluationPeriods": "1",
+        "Threshold": "80",
+        "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
+        "Dimensions": [
+           {
+              "Name": "InstanceId",
+              "Value": { "Ref": "SearchHeadInstance1" }
+           },
+           {
+              "Name": "MountPath",
+              "Value": "/"
+           },
+           {
+              "Name": "Filesystem",
+              "Value": "/dev/xvda1"
+           }
+        ],
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold"
+      }
+    },
+    "SearchHeadInstance1MemoryUtilization": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Splunk Search Head Memory Utilization",
+        "MetricName": "MemoryUtilization",
+        "Namespace": "System/Linux",
+        "Statistic": "Average",
+        "Period": "300",
+        "EvaluationPeriods": "1",
+        "Threshold": "80",
+        "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
+        "Dimensions": [
+           {
+              "Name": "InstanceId",
+              "Value": { "Ref": "SearchHeadInstance1" }
+           }
+        ],
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold"
+      }
+    },
+    "SearchHeadInstance1SwapUtilization": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Splunk Search Head Swap Utilization",
+        "MetricName": "SwapUtilization",
+        "Namespace": "System/Linux",
+        "Statistic": "Average",
+        "Period": "300",
+        "EvaluationPeriods": "1",
+        "Threshold": "50",
+        "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
+        "Dimensions": [
+           {
+              "Name": "InstanceId",
+              "Value": { "Ref": "SearchHeadInstance1" }
+           }
+        ],
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold"
+      }
+    },
+    "SearchHeadInstance1CPUUtilization": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Splunk Search Head CPU Utilization",
+        "MetricName": "CPUUtilization",
+        "Namespace": "AWS/EC2",
+        "Statistic": "Average",
+        "Period": "300",
+        "EvaluationPeriods": "2",
+        "Threshold": "90",
+        "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
+        "Dimensions": [
+           {
+              "Name": "InstanceId",
+              "Value": { "Ref": "SearchHeadInstance1" }
+           }
+        ],
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold"
+      }
+    },
+
+
     "SearchHeadInstance2" : {
       "Type" : "AWS::EC2::Instance",
       "Properties" : {
@@ -427,6 +521,95 @@
         ]
       }
     },
+    "SearchHeadInstance2DiskUtilizationRoot": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Splunk Search Head Root Disk Utilization",
+        "MetricName": "DiskSpaceUtilization",
+        "Namespace": "System/Linux",
+        "Statistic": "Average",
+        "Period": "300",
+        "EvaluationPeriods": "1",
+        "Threshold": "80",
+        "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
+        "Dimensions": [
+           {
+              "Name": "InstanceId",
+              "Value": { "Ref": "SearchHeadInstance2" }
+           },
+           {
+              "Name": "MountPath",
+              "Value": "/"
+           },
+           {
+              "Name": "Filesystem",
+              "Value": "/dev/xvda1"
+           }
+        ],
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold"
+      }
+    },
+    "SearchHeadInstance2MemoryUtilization": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Splunk Search Head Memory Utilization",
+        "MetricName": "MemoryUtilization",
+        "Namespace": "System/Linux",
+        "Statistic": "Average",
+        "Period": "300",
+        "EvaluationPeriods": "1",
+        "Threshold": "80",
+        "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
+        "Dimensions": [
+           {
+              "Name": "InstanceId",
+              "Value": { "Ref": "SearchHeadInstance2" }
+           }
+        ],
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold"
+      }
+    },
+    "SearchHeadInstance2SwapUtilization": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Splunk Search Head Swap Utilization",
+        "MetricName": "SwapUtilization",
+        "Namespace": "System/Linux",
+        "Statistic": "Average",
+        "Period": "300",
+        "EvaluationPeriods": "1",
+        "Threshold": "50",
+        "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
+        "Dimensions": [
+           {
+              "Name": "InstanceId",
+              "Value": { "Ref": "SearchHeadInstance2" }
+           }
+        ],
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold"
+      }
+    },
+    "SearchHeadInstance2CPUUtilization": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Splunk Search Head CPU Utilization",
+        "MetricName": "CPUUtilization",
+        "Namespace": "AWS/EC2",
+        "Statistic": "Average",
+        "Period": "300",
+        "EvaluationPeriods": "2",
+        "Threshold": "90",
+        "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
+        "Dimensions": [
+           {
+              "Name": "InstanceId",
+              "Value": { "Ref": "SearchHeadInstance2" }
+           }
+        ],
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold"
+      }
+    },
+
 
     "PeerNodeInstance1" : {
       "Type" : "AWS::EC2::Instance",
@@ -470,6 +653,122 @@
             "Value" : "Splunk Peer Node"
           }
         ]
+      }
+    },
+    "PeerNodeInstance1DiskUtilizationSplunk": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Splunk Peer Node Data Disk Utilization",
+        "MetricName": "DiskSpaceUtilization",
+        "Namespace": "System/Linux",
+        "Statistic": "Average",
+        "Period": "300",
+        "EvaluationPeriods": "1",
+        "Threshold": "80",
+        "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
+        "Dimensions": [
+           {
+              "Name": "InstanceId",
+              "Value": { "Ref": "PeerNodeInstance1" }
+           },
+           {
+              "Name": "MountPath",
+              "Value": "/opt/splunk/data"
+           },
+           {
+              "Name": "Filesystem",
+              "Value": "/dev/md127"
+           }
+        ],
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold"
+      }
+    },
+    "PeerNodeInstance1DiskUtilizationRoot": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Splunk Peer Node Root Disk Utilization",
+        "MetricName": "DiskSpaceUtilization",
+        "Namespace": "System/Linux",
+        "Statistic": "Average",
+        "Period": "300",
+        "EvaluationPeriods": "1",
+        "Threshold": "80",
+        "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
+        "Dimensions": [
+           {
+              "Name": "InstanceId",
+              "Value": { "Ref": "PeerNodeInstance1" }
+           },
+           {
+              "Name": "MountPath",
+              "Value": "/"
+           },
+           {
+              "Name": "Filesystem",
+              "Value": "/dev/xvda1"
+           }
+        ],
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold"
+      }
+    },
+    "PeerNodeInstance1MemoryUtilization": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Splunk Peer Node Memory Utilization",
+        "MetricName": "MemoryUtilization",
+        "Namespace": "System/Linux",
+        "Statistic": "Average",
+        "Period": "300",
+        "EvaluationPeriods": "1",
+        "Threshold": "80",
+        "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
+        "Dimensions": [
+           {
+              "Name": "InstanceId",
+              "Value": { "Ref": "PeerNodeInstance1" }
+           }
+        ],
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold"
+      }
+    },
+    "PeerNodeInstance1SwapUtilization": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Splunk Peer Node Swap Utilization",
+        "MetricName": "SwapUtilization",
+        "Namespace": "System/Linux",
+        "Statistic": "Average",
+        "Period": "300",
+        "EvaluationPeriods": "1",
+        "Threshold": "50",
+        "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
+        "Dimensions": [
+           {
+              "Name": "InstanceId",
+              "Value": { "Ref": "PeerNodeInstance1" }
+           }
+        ],
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold"
+      }
+    },
+    "PeerNodeInstance1CPUUtilization": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Splunk Peer Node CPU Utilization",
+        "MetricName": "CPUUtilization",
+        "Namespace": "AWS/EC2",
+        "Statistic": "Average",
+        "Period": "300",
+        "EvaluationPeriods": "2",
+        "Threshold": "90",
+        "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
+        "Dimensions": [
+           {
+              "Name": "InstanceId",
+              "Value": { "Ref": "PeerNodeInstance1" }
+           }
+        ],
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold"
       }
     },
 
@@ -517,6 +816,122 @@
         ]
       }
     },
+    "PeerNodeInstance2DiskUtilizationSplunk": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Splunk Peer Node Data Disk Utilization",
+        "MetricName": "DiskSpaceUtilization",
+        "Namespace": "System/Linux",
+        "Statistic": "Average",
+        "Period": "300",
+        "EvaluationPeriods": "1",
+        "Threshold": "80",
+        "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
+        "Dimensions": [
+           {
+              "Name": "InstanceId",
+              "Value": { "Ref": "PeerNodeInstance2" }
+           },
+           {
+              "Name": "MountPath",
+              "Value": "/opt/splunk/data"
+           },
+           {
+              "Name": "Filesystem",
+              "Value": "/dev/md127"
+           }
+        ],
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold"
+      }
+    },
+    "PeerNodeInstance2DiskUtilizationRoot": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Splunk Peer Node Root Disk Utilization",
+        "MetricName": "DiskSpaceUtilization",
+        "Namespace": "System/Linux",
+        "Statistic": "Average",
+        "Period": "300",
+        "EvaluationPeriods": "1",
+        "Threshold": "80",
+        "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
+        "Dimensions": [
+           {
+              "Name": "InstanceId",
+              "Value": { "Ref": "PeerNodeInstance2" }
+           },
+           {
+              "Name": "MountPath",
+              "Value": "/"
+           },
+           {
+              "Name": "Filesystem",
+              "Value": "/dev/xvda1"
+           }
+        ],
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold"
+      }
+    },
+    "PeerNodeInstance2MemoryUtilization": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Splunk Peer Node Memory Utilization",
+        "MetricName": "MemoryUtilization",
+        "Namespace": "System/Linux",
+        "Statistic": "Average",
+        "Period": "300",
+        "EvaluationPeriods": "1",
+        "Threshold": "80",
+        "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
+        "Dimensions": [
+           {
+              "Name": "InstanceId",
+              "Value": { "Ref": "PeerNodeInstance2" }
+           }
+        ],
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold"
+      }
+    },
+    "PeerNodeInstance2SwapUtilization": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Splunk Peer Node Swap Utilization",
+        "MetricName": "SwapUtilization",
+        "Namespace": "System/Linux",
+        "Statistic": "Average",
+        "Period": "300",
+        "EvaluationPeriods": "1",
+        "Threshold": "50",
+        "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
+        "Dimensions": [
+           {
+              "Name": "InstanceId",
+              "Value": { "Ref": "PeerNodeInstance2" }
+           }
+        ],
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold"
+      }
+    },
+    "PeerNodeInstance2CPUUtilization": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Splunk Peer Node CPU Utilization",
+        "MetricName": "CPUUtilization",
+        "Namespace": "AWS/EC2",
+        "Statistic": "Average",
+        "Period": "300",
+        "EvaluationPeriods": "2",
+        "Threshold": "90",
+        "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
+        "Dimensions": [
+           {
+              "Name": "InstanceId",
+              "Value": { "Ref": "PeerNodeInstance2" }
+           }
+        ],
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold"
+      }
+    },
 
     "PeerNodeInstance3" : {
       "Type" : "AWS::EC2::Instance",
@@ -560,6 +975,122 @@
             "Value" : "Splunk Peer Node"
           }
         ]
+      }
+    },
+    "PeerNodeInstance3DiskUtilizationSplunk": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Splunk Peer Node Data Disk Utilization",
+        "MetricName": "DiskSpaceUtilization",
+        "Namespace": "System/Linux",
+        "Statistic": "Average",
+        "Period": "300",
+        "EvaluationPeriods": "1",
+        "Threshold": "80",
+        "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
+        "Dimensions": [
+           {
+              "Name": "InstanceId",
+              "Value": { "Ref": "PeerNodeInstance3" }
+           },
+           {
+              "Name": "MountPath",
+              "Value": "/opt/splunk/data"
+           },
+           {
+              "Name": "Filesystem",
+              "Value": "/dev/md127"
+           }
+        ],
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold"
+      }
+    },
+    "PeerNodeInstance3DiskUtilizationRoot": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Splunk Peer Node Root Disk Utilization",
+        "MetricName": "DiskSpaceUtilization",
+        "Namespace": "System/Linux",
+        "Statistic": "Average",
+        "Period": "300",
+        "EvaluationPeriods": "1",
+        "Threshold": "80",
+        "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
+        "Dimensions": [
+           {
+              "Name": "InstanceId",
+              "Value": { "Ref": "PeerNodeInstance3" }
+           },
+           {
+              "Name": "MountPath",
+              "Value": "/"
+           },
+           {
+              "Name": "Filesystem",
+              "Value": "/dev/xvda1"
+           }
+        ],
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold"
+      }
+    },
+    "PeerNodeInstance3MemoryUtilization": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Splunk Peer Node Memory Utilization",
+        "MetricName": "MemoryUtilization",
+        "Namespace": "System/Linux",
+        "Statistic": "Average",
+        "Period": "300",
+        "EvaluationPeriods": "1",
+        "Threshold": "80",
+        "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
+        "Dimensions": [
+           {
+              "Name": "InstanceId",
+              "Value": { "Ref": "PeerNodeInstance3" }
+           }
+        ],
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold"
+      }
+    },
+    "PeerNodeInstance3SwapUtilization": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Splunk Peer Node Swap Utilization",
+        "MetricName": "SwapUtilization",
+        "Namespace": "System/Linux",
+        "Statistic": "Average",
+        "Period": "300",
+        "EvaluationPeriods": "1",
+        "Threshold": "50",
+        "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
+        "Dimensions": [
+           {
+              "Name": "InstanceId",
+              "Value": { "Ref": "PeerNodeInstance3" }
+           }
+        ],
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold"
+      }
+    },
+    "PeerNodeInstance3CPUUtilization": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Splunk Peer Node CPU Utilization",
+        "MetricName": "CPUUtilization",
+        "Namespace": "AWS/EC2",
+        "Statistic": "Average",
+        "Period": "300",
+        "EvaluationPeriods": "2",
+        "Threshold": "90",
+        "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
+        "Dimensions": [
+           {
+              "Name": "InstanceId",
+              "Value": { "Ref": "PeerNodeInstance3" }
+           }
+        ],
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold"
       }
     },
 
@@ -607,6 +1138,122 @@
         ]
       }
     },
+    "PeerNodeInstance4DiskUtilizationSplunk": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Splunk Peer Node Data Disk Utilization",
+        "MetricName": "DiskSpaceUtilization",
+        "Namespace": "System/Linux",
+        "Statistic": "Average",
+        "Period": "300",
+        "EvaluationPeriods": "1",
+        "Threshold": "80",
+        "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
+        "Dimensions": [
+           {
+              "Name": "InstanceId",
+              "Value": { "Ref": "PeerNodeInstance4" }
+           },
+           {
+              "Name": "MountPath",
+              "Value": "/opt/splunk/data"
+           },
+           {
+              "Name": "Filesystem",
+              "Value": "/dev/md127"
+           }
+        ],
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold"
+      }
+    },
+    "PeerNodeInstance4DiskUtilizationRoot": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Splunk Peer Node Root Disk Utilization",
+        "MetricName": "DiskSpaceUtilization",
+        "Namespace": "System/Linux",
+        "Statistic": "Average",
+        "Period": "300",
+        "EvaluationPeriods": "1",
+        "Threshold": "80",
+        "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
+        "Dimensions": [
+           {
+              "Name": "InstanceId",
+              "Value": { "Ref": "PeerNodeInstance4" }
+           },
+           {
+              "Name": "MountPath",
+              "Value": "/"
+           },
+           {
+              "Name": "Filesystem",
+              "Value": "/dev/xvda1"
+           }
+        ],
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold"
+      }
+    },
+    "PeerNodeInstance4MemoryUtilization": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Splunk Peer Node Memory Utilization",
+        "MetricName": "MemoryUtilization",
+        "Namespace": "System/Linux",
+        "Statistic": "Average",
+        "Period": "300",
+        "EvaluationPeriods": "1",
+        "Threshold": "80",
+        "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
+        "Dimensions": [
+           {
+              "Name": "InstanceId",
+              "Value": { "Ref": "PeerNodeInstance4" }
+           }
+        ],
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold"
+      }
+    },
+    "PeerNodeInstance4SwapUtilization": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Splunk Peer Node Swap Utilization",
+        "MetricName": "SwapUtilization",
+        "Namespace": "System/Linux",
+        "Statistic": "Average",
+        "Period": "300",
+        "EvaluationPeriods": "1",
+        "Threshold": "50",
+        "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
+        "Dimensions": [
+           {
+              "Name": "InstanceId",
+              "Value": { "Ref": "PeerNodeInstance4" }
+           }
+        ],
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold"
+      }
+    },
+    "PeerNodeInstance4CPUUtilization": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Splunk Peer Node CPU Utilization",
+        "MetricName": "CPUUtilization",
+        "Namespace": "AWS/EC2",
+        "Statistic": "Average",
+        "Period": "300",
+        "EvaluationPeriods": "2",
+        "Threshold": "90",
+        "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
+        "Dimensions": [
+           {
+              "Name": "InstanceId",
+              "Value": { "Ref": "PeerNodeInstance4" }
+           }
+        ],
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold"
+      }
+    },
 
     "ClusterMasterInstance1" : {
       "Type" : "AWS::EC2::Instance",
@@ -645,6 +1292,94 @@
             "Value" : "Splunk Cluster Master"
           }
         ]
+      }
+    },
+    "ClusterMaster1DiskUtilizationRoot": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Splunk Search Head Root Disk Utilization",
+        "MetricName": "DiskSpaceUtilization",
+        "Namespace": "System/Linux",
+        "Statistic": "Average",
+        "Period": "300",
+        "EvaluationPeriods": "1",
+        "Threshold": "80",
+        "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
+        "Dimensions": [
+           {
+              "Name": "InstanceId",
+              "Value": { "Ref": "ClusterMasterInstance1" }
+           },
+           {
+              "Name": "MountPath",
+              "Value": "/"
+           },
+           {
+              "Name": "Filesystem",
+              "Value": "/dev/xvda1"
+           }
+        ],
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold"
+      }
+    },
+    "ClusterMaster1MemoryUtilization": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Splunk Search Head Memory Utilization",
+        "MetricName": "MemoryUtilization",
+        "Namespace": "System/Linux",
+        "Statistic": "Average",
+        "Period": "300",
+        "EvaluationPeriods": "1",
+        "Threshold": "80",
+        "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
+        "Dimensions": [
+           {
+              "Name": "InstanceId",
+              "Value": { "Ref": "ClusterMasterInstance1" }
+           }
+        ],
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold"
+      }
+    },
+    "ClusterMaster1SwapUtilization": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Splunk Search Head Swap Utilization",
+        "MetricName": "SwapUtilization",
+        "Namespace": "System/Linux",
+        "Statistic": "Average",
+        "Period": "300",
+        "EvaluationPeriods": "1",
+        "Threshold": "50",
+        "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
+        "Dimensions": [
+           {
+              "Name": "InstanceId",
+              "Value": { "Ref": "ClusterMasterInstance1" }
+           }
+        ],
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold"
+      }
+    },
+    "ClusterMaster1CPUUtilization": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Splunk Search Head CPU Utilization",
+        "MetricName": "CPUUtilization",
+        "Namespace": "AWS/EC2",
+        "Statistic": "Average",
+        "Period": "300",
+        "EvaluationPeriods": "2",
+        "Threshold": "90",
+        "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
+        "Dimensions": [
+           {
+              "Name": "InstanceId",
+              "Value": { "Ref": "ClusterMasterInstance1" }
+           }
+        ],
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold"
       }
     },
 
@@ -687,6 +1422,95 @@
         ]
       }
     },
+    "IntermediateForwarder1DiskUtilizationRoot": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Splunk Search Head Root Disk Utilization",
+        "MetricName": "DiskSpaceUtilization",
+        "Namespace": "System/Linux",
+        "Statistic": "Average",
+        "Period": "300",
+        "EvaluationPeriods": "1",
+        "Threshold": "80",
+        "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
+        "Dimensions": [
+           {
+              "Name": "InstanceId",
+              "Value": { "Ref": "IntermediateForwarderInstance1" }
+           },
+           {
+              "Name": "MountPath",
+              "Value": "/"
+           },
+           {
+              "Name": "Filesystem",
+              "Value": "/dev/xvda1"
+           }
+        ],
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold"
+      }
+    },
+    "IntermediateForwarder1MemoryUtilization": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Splunk Search Head Memory Utilization",
+        "MetricName": "MemoryUtilization",
+        "Namespace": "System/Linux",
+        "Statistic": "Average",
+        "Period": "300",
+        "EvaluationPeriods": "1",
+        "Threshold": "80",
+        "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
+        "Dimensions": [
+           {
+              "Name": "InstanceId",
+              "Value": { "Ref": "IntermediateForwarderInstance1" }
+           }
+        ],
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold"
+      }
+    },
+    "IntermediateForwarder1SwapUtilization": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Splunk Search Head Swap Utilization",
+        "MetricName": "SwapUtilization",
+        "Namespace": "System/Linux",
+        "Statistic": "Average",
+        "Period": "300",
+        "EvaluationPeriods": "1",
+        "Threshold": "50",
+        "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
+        "Dimensions": [
+           {
+              "Name": "InstanceId",
+              "Value": { "Ref": "IntermediateForwarderInstance1" }
+           }
+        ],
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold"
+      }
+    },
+    "IntermediateForwarder1CPUUtilization": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Splunk Search Head CPU Utilization",
+        "MetricName": "CPUUtilization",
+        "Namespace": "AWS/EC2",
+        "Statistic": "Average",
+        "Period": "300",
+        "EvaluationPeriods": "2",
+        "Threshold": "90",
+        "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
+        "Dimensions": [
+           {
+              "Name": "InstanceId",
+              "Value": { "Ref": "IntermediateForwarderInstance1" }
+           }
+        ],
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold"
+      }
+    },
+
 
     "IntermediateForwarderInstance2" : {
       "Type" : "AWS::EC2::Instance",
@@ -725,6 +1549,94 @@
             "Value" : "Splunk Intermediate Forwarder"
           }
         ]
+      }
+    },
+    "IntermediateForwarder2DiskUtilizationRoot": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Splunk Search Head Root Disk Utilization",
+        "MetricName": "DiskSpaceUtilization",
+        "Namespace": "System/Linux",
+        "Statistic": "Average",
+        "Period": "300",
+        "EvaluationPeriods": "1",
+        "Threshold": "80",
+        "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
+        "Dimensions": [
+           {
+              "Name": "InstanceId",
+              "Value": { "Ref": "IntermediateForwarderInstance2" }
+           },
+           {
+              "Name": "MountPath",
+              "Value": "/"
+           },
+           {
+              "Name": "Filesystem",
+              "Value": "/dev/xvda1"
+           }
+        ],
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold"
+      }
+    },
+    "IntermediateForwarder2MemoryUtilization": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Splunk Search Head Memory Utilization",
+        "MetricName": "MemoryUtilization",
+        "Namespace": "System/Linux",
+        "Statistic": "Average",
+        "Period": "300",
+        "EvaluationPeriods": "1",
+        "Threshold": "80",
+        "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
+        "Dimensions": [
+           {
+              "Name": "InstanceId",
+              "Value": { "Ref": "IntermediateForwarderInstance2" }
+           }
+        ],
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold"
+      }
+    },
+    "IntermediateForwarder2SwapUtilization": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Splunk Search Head Swap Utilization",
+        "MetricName": "SwapUtilization",
+        "Namespace": "System/Linux",
+        "Statistic": "Average",
+        "Period": "300",
+        "EvaluationPeriods": "1",
+        "Threshold": "50",
+        "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
+        "Dimensions": [
+           {
+              "Name": "InstanceId",
+              "Value": { "Ref": "IntermediateForwarderInstance2" }
+           }
+        ],
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold"
+      }
+    },
+    "IntermediateForwarder2CPUUtilization": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Splunk Search Head CPU Utilization",
+        "MetricName": "CPUUtilization",
+        "Namespace": "AWS/EC2",
+        "Statistic": "Average",
+        "Period": "300",
+        "EvaluationPeriods": "2",
+        "Threshold": "90",
+        "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
+        "Dimensions": [
+           {
+              "Name": "InstanceId",
+              "Value": { "Ref": "IntermediateForwarderInstance2" }
+           }
+        ],
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold"
       }
     },
 
@@ -767,6 +1679,94 @@
         ]
       }
     },
+    "LicenseMasterInstance1DiskUtilizationRoot": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Splunk Search Head Root Disk Utilization",
+        "MetricName": "DiskSpaceUtilization",
+        "Namespace": "System/Linux",
+        "Statistic": "Average",
+        "Period": "300",
+        "EvaluationPeriods": "1",
+        "Threshold": "80",
+        "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
+        "Dimensions": [
+           {
+              "Name": "InstanceId",
+              "Value": { "Ref": "LicenseMasterInstance1" }
+           },
+           {
+              "Name": "MountPath",
+              "Value": "/"
+           },
+           {
+              "Name": "Filesystem",
+              "Value": "/dev/xvda1"
+           }
+        ],
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold"
+      }
+    },
+    "LicenseMasterInstance1MemoryUtilization": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Splunk Search Head Memory Utilization",
+        "MetricName": "MemoryUtilization",
+        "Namespace": "System/Linux",
+        "Statistic": "Average",
+        "Period": "300",
+        "EvaluationPeriods": "1",
+        "Threshold": "80",
+        "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
+        "Dimensions": [
+           {
+              "Name": "InstanceId",
+              "Value": { "Ref": "LicenseMasterInstance1" }
+           }
+        ],
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold"
+      }
+    },
+    "LicenseMasterInstance1SwapUtilization": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Splunk Search Head Swap Utilization",
+        "MetricName": "SwapUtilization",
+        "Namespace": "System/Linux",
+        "Statistic": "Average",
+        "Period": "300",
+        "EvaluationPeriods": "1",
+        "Threshold": "50",
+        "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
+        "Dimensions": [
+           {
+              "Name": "InstanceId",
+              "Value": { "Ref": "LicenseMasterInstance1" }
+           }
+        ],
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold"
+      }
+    },
+    "LicenseMasterInstance1CPUUtilization": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Splunk Search Head CPU Utilization",
+        "MetricName": "CPUUtilization",
+        "Namespace": "AWS/EC2",
+        "Statistic": "Average",
+        "Period": "300",
+        "EvaluationPeriods": "2",
+        "Threshold": "90",
+        "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
+        "Dimensions": [
+           {
+              "Name": "InstanceId",
+              "Value": { "Ref": "LicenseMasterInstance1" }
+           }
+        ],
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold"
+      }
+    },
 
     "DeploymentInstance1" : {
       "Type" : "AWS::EC2::Instance",
@@ -806,6 +1806,94 @@
             "Value" : "Splunk Deployment Server"
           }
         ]
+      }
+    },
+    "DeploymentInstance1DiskUtilizationRoot": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Splunk Search Head Root Disk Utilization",
+        "MetricName": "DiskSpaceUtilization",
+        "Namespace": "System/Linux",
+        "Statistic": "Average",
+        "Period": "300",
+        "EvaluationPeriods": "1",
+        "Threshold": "80",
+        "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
+        "Dimensions": [
+           {
+              "Name": "InstanceId",
+              "Value": { "Ref": "DeploymentInstance1" }
+           },
+           {
+              "Name": "MountPath",
+              "Value": "/"
+           },
+           {
+              "Name": "Filesystem",
+              "Value": "/dev/xvda1"
+           }
+        ],
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold"
+      }
+    },
+    "DeploymentInstance1MemoryUtilization": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Splunk Search Head Memory Utilization",
+        "MetricName": "MemoryUtilization",
+        "Namespace": "System/Linux",
+        "Statistic": "Average",
+        "Period": "300",
+        "EvaluationPeriods": "1",
+        "Threshold": "80",
+        "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
+        "Dimensions": [
+           {
+              "Name": "InstanceId",
+              "Value": { "Ref": "DeploymentInstance1" }
+           }
+        ],
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold"
+      }
+    },
+    "DeploymentInstance1SwapUtilization": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Splunk Search Head Swap Utilization",
+        "MetricName": "SwapUtilization",
+        "Namespace": "System/Linux",
+        "Statistic": "Average",
+        "Period": "300",
+        "EvaluationPeriods": "1",
+        "Threshold": "50",
+        "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
+        "Dimensions": [
+           {
+              "Name": "InstanceId",
+              "Value": { "Ref": "DeploymentInstance1" }
+           }
+        ],
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold"
+      }
+    },
+    "DeploymentInstance1CPUUtilization": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Splunk Search Head CPU Utilization",
+        "MetricName": "CPUUtilization",
+        "Namespace": "AWS/EC2",
+        "Statistic": "Average",
+        "Period": "300",
+        "EvaluationPeriods": "2",
+        "Threshold": "90",
+        "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
+        "Dimensions": [
+           {
+              "Name": "InstanceId",
+              "Value": { "Ref": "DeploymentInstance1" }
+           }
+        ],
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold"
       }
     },
 
@@ -1018,6 +2106,26 @@
         ]
       }
     },
+    "SplunkInternalComponentsPolicies3": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyName": "Put-Cloudwatch-Metrics",
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Action": [ "cloudwatch:PutMetricData" ],
+              "Resource": [ "*" ]
+            }
+          ]
+        },
+        "Roles": [
+          {
+            "Ref": "SplunkInternalComponentsRole"
+          }
+        ]
+      }
+    },
     "SplunkInternalComponentsInstanceProfile": {
       "Type": "AWS::IAM::InstanceProfile",
       "Properties": {
@@ -1084,6 +2192,26 @@
               "Resource": [
                 "*"
               ]
+            }
+          ]
+        },
+        "Roles": [
+          {
+            "Ref": "SplunkInternetComponentsRole"
+          }
+        ]
+      }
+    },
+    "SplunkInternetComponentsPolicies3": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyName": "Put-Cloudwatch-Metrics",
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Action": [ "cloudwatch:PutMetricData" ],
+              "Resource": [ "*" ]
             }
           ]
         },
@@ -1195,6 +2323,26 @@
               "Resource": [
                 "*"
               ]
+            }
+          ]
+        },
+        "Roles": [
+          {
+            "Ref": "BastionRole"
+          }
+        ]
+      }
+    },
+    "BastionPolicy4": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyName": "Put-Cloudwatch-Metrics",
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Action": [ "cloudwatch:PutMetricData" ],
+              "Resource": [ "*" ]
             }
           ]
         },
