@@ -2692,6 +2692,7 @@
         "SecurityGroupIngress" : [
           { "IpProtocol" : "tcp", "FromPort" : "22", "ToPort" : "22", "SourceSecurityGroupId" : { "Ref" : "ManagementSG" } },
           { "IpProtocol" : "tcp", "FromPort" : "8000", "ToPort" : "8000", "SourceSecurityGroupId" : { "Ref" : "SplunkSearchHeadLoadBalancerSG" } },
+          { "IpProtocol" : "tcp", "FromPort" : "8089", "ToPort" : "8089", "SourceSecurityGroupId" : { "Ref" : "SplunkInternalComponentsSG" } },
           { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "SourceSecurityGroupId" : { "Ref" : "ManagementSG" } }
         ],
         "Tags" : [
@@ -2708,6 +2709,33 @@
             "Value" : { "Ref" : "AppName" }
           }
         ]
+      }
+    },
+
+    "SplunkSearchHeadSGIngress9887": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "DependsOn": "SplunkSearchHeadSG",
+      "Properties": {
+        "GroupId": { "Ref": "SplunkSearchHeadSG" },
+        "IpProtocol": "tcp", "FromPort": "9887", "ToPort": "9887", "SourceSecurityGroupId": { "Ref": "SplunkSearchHeadSG" }
+      }
+    },
+
+    "SplunkSearchHeadSGIngress8191": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "DependsOn": "SplunkSearchHeadSG",
+      "Properties": {
+        "GroupId": { "Ref": "SplunkSearchHeadSG" },
+        "IpProtocol": "tcp", "FromPort": "8191", "ToPort": "8191", "SourceSecurityGroupId": { "Ref": "SplunkSearchHeadSG" }
+      }
+    },
+
+    "SplunkSearchHeadSGIngress8065": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "DependsOn": "SplunkSearchHeadSG",
+      "Properties": {
+        "GroupId": { "Ref": "SplunkSearchHeadSG" },
+        "IpProtocol": "tcp", "FromPort": "8065", "ToPort": "8065", "SourceSecurityGroupId": { "Ref": "SplunkSearchHeadSG" }
       }
     },
 
