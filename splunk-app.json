@@ -396,7 +396,7 @@
         "Namespace": "System/Linux",
         "Statistic": "Average",
         "Period": "300",
-        "EvaluationPeriods": "1",
+        "EvaluationPeriods": "3",
         "Threshold": "80",
         "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
         "Dimensions": [
@@ -424,7 +424,7 @@
         "Namespace": "System/Linux",
         "Statistic": "Average",
         "Period": "300",
-        "EvaluationPeriods": "1",
+        "EvaluationPeriods": "3",
         "Threshold": "80",
         "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
         "Dimensions": [
@@ -444,7 +444,7 @@
         "Namespace": "System/Linux",
         "Statistic": "Average",
         "Period": "300",
-        "EvaluationPeriods": "1",
+        "EvaluationPeriods": "3",
         "Threshold": "50",
         "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
         "Dimensions": [
@@ -529,7 +529,7 @@
         "Namespace": "System/Linux",
         "Statistic": "Average",
         "Period": "300",
-        "EvaluationPeriods": "1",
+        "EvaluationPeriods": "3",
         "Threshold": "80",
         "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
         "Dimensions": [
@@ -557,7 +557,7 @@
         "Namespace": "System/Linux",
         "Statistic": "Average",
         "Period": "300",
-        "EvaluationPeriods": "1",
+        "EvaluationPeriods": "3",
         "Threshold": "80",
         "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
         "Dimensions": [
@@ -577,7 +577,7 @@
         "Namespace": "System/Linux",
         "Statistic": "Average",
         "Period": "300",
-        "EvaluationPeriods": "1",
+        "EvaluationPeriods": "3",
         "Threshold": "50",
         "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
         "Dimensions": [
@@ -663,7 +663,7 @@
         "Namespace": "System/Linux",
         "Statistic": "Average",
         "Period": "300",
-        "EvaluationPeriods": "1",
+        "EvaluationPeriods": "3",
         "Threshold": "80",
         "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
         "Dimensions": [
@@ -691,7 +691,7 @@
         "Namespace": "System/Linux",
         "Statistic": "Average",
         "Period": "300",
-        "EvaluationPeriods": "1",
+        "EvaluationPeriods": "3",
         "Threshold": "80",
         "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
         "Dimensions": [
@@ -719,7 +719,7 @@
         "Namespace": "System/Linux",
         "Statistic": "Average",
         "Period": "300",
-        "EvaluationPeriods": "1",
+        "EvaluationPeriods": "3",
         "Threshold": "80",
         "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
         "Dimensions": [
@@ -739,7 +739,7 @@
         "Namespace": "System/Linux",
         "Statistic": "Average",
         "Period": "300",
-        "EvaluationPeriods": "1",
+        "EvaluationPeriods": "3",
         "Threshold": "50",
         "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
         "Dimensions": [
@@ -824,7 +824,7 @@
         "Namespace": "System/Linux",
         "Statistic": "Average",
         "Period": "300",
-        "EvaluationPeriods": "1",
+        "EvaluationPeriods": "3",
         "Threshold": "80",
         "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
         "Dimensions": [
@@ -852,7 +852,7 @@
         "Namespace": "System/Linux",
         "Statistic": "Average",
         "Period": "300",
-        "EvaluationPeriods": "1",
+        "EvaluationPeriods": "3",
         "Threshold": "80",
         "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
         "Dimensions": [
@@ -880,7 +880,7 @@
         "Namespace": "System/Linux",
         "Statistic": "Average",
         "Period": "300",
-        "EvaluationPeriods": "1",
+        "EvaluationPeriods": "3",
         "Threshold": "80",
         "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
         "Dimensions": [
@@ -900,7 +900,7 @@
         "Namespace": "System/Linux",
         "Statistic": "Average",
         "Period": "300",
-        "EvaluationPeriods": "1",
+        "EvaluationPeriods": "3",
         "Threshold": "50",
         "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
         "Dimensions": [
@@ -985,7 +985,7 @@
         "Namespace": "System/Linux",
         "Statistic": "Average",
         "Period": "300",
-        "EvaluationPeriods": "1",
+        "EvaluationPeriods": "3",
         "Threshold": "80",
         "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
         "Dimensions": [
@@ -1013,7 +1013,7 @@
         "Namespace": "System/Linux",
         "Statistic": "Average",
         "Period": "300",
-        "EvaluationPeriods": "1",
+        "EvaluationPeriods": "3",
         "Threshold": "80",
         "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
         "Dimensions": [
@@ -1041,7 +1041,7 @@
         "Namespace": "System/Linux",
         "Statistic": "Average",
         "Period": "300",
-        "EvaluationPeriods": "1",
+        "EvaluationPeriods": "3",
         "Threshold": "80",
         "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
         "Dimensions": [
@@ -1061,7 +1061,7 @@
         "Namespace": "System/Linux",
         "Statistic": "Average",
         "Period": "300",
-        "EvaluationPeriods": "1",
+        "EvaluationPeriods": "3",
         "Threshold": "50",
         "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
         "Dimensions": [
@@ -1146,7 +1146,7 @@
         "Namespace": "System/Linux",
         "Statistic": "Average",
         "Period": "300",
-        "EvaluationPeriods": "1",
+        "EvaluationPeriods": "3",
         "Threshold": "80",
         "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
         "Dimensions": [
@@ -1174,7 +1174,7 @@
         "Namespace": "System/Linux",
         "Statistic": "Average",
         "Period": "300",
-        "EvaluationPeriods": "1",
+        "EvaluationPeriods": "3",
         "Threshold": "80",
         "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
         "Dimensions": [
@@ -1202,7 +1202,7 @@
         "Namespace": "System/Linux",
         "Statistic": "Average",
         "Period": "300",
-        "EvaluationPeriods": "1",
+        "EvaluationPeriods": "3",
         "Threshold": "80",
         "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
         "Dimensions": [
@@ -1222,7 +1222,7 @@
         "Namespace": "System/Linux",
         "Statistic": "Average",
         "Period": "300",
-        "EvaluationPeriods": "1",
+        "EvaluationPeriods": "3",
         "Threshold": "50",
         "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
         "Dimensions": [
@@ -1302,7 +1302,7 @@
         "Namespace": "System/Linux",
         "Statistic": "Average",
         "Period": "300",
-        "EvaluationPeriods": "1",
+        "EvaluationPeriods": "3",
         "Threshold": "80",
         "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
         "Dimensions": [
@@ -1330,7 +1330,7 @@
         "Namespace": "System/Linux",
         "Statistic": "Average",
         "Period": "300",
-        "EvaluationPeriods": "1",
+        "EvaluationPeriods": "3",
         "Threshold": "80",
         "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
         "Dimensions": [
@@ -1350,7 +1350,7 @@
         "Namespace": "System/Linux",
         "Statistic": "Average",
         "Period": "300",
-        "EvaluationPeriods": "1",
+        "EvaluationPeriods": "3",
         "Threshold": "50",
         "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
         "Dimensions": [
@@ -1430,7 +1430,7 @@
         "Namespace": "System/Linux",
         "Statistic": "Average",
         "Period": "300",
-        "EvaluationPeriods": "1",
+        "EvaluationPeriods": "3",
         "Threshold": "80",
         "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
         "Dimensions": [
@@ -1458,7 +1458,7 @@
         "Namespace": "System/Linux",
         "Statistic": "Average",
         "Period": "300",
-        "EvaluationPeriods": "1",
+        "EvaluationPeriods": "3",
         "Threshold": "80",
         "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
         "Dimensions": [
@@ -1478,7 +1478,7 @@
         "Namespace": "System/Linux",
         "Statistic": "Average",
         "Period": "300",
-        "EvaluationPeriods": "1",
+        "EvaluationPeriods": "3",
         "Threshold": "50",
         "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
         "Dimensions": [
@@ -1559,7 +1559,7 @@
         "Namespace": "System/Linux",
         "Statistic": "Average",
         "Period": "300",
-        "EvaluationPeriods": "1",
+        "EvaluationPeriods": "3",
         "Threshold": "80",
         "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
         "Dimensions": [
@@ -1587,7 +1587,7 @@
         "Namespace": "System/Linux",
         "Statistic": "Average",
         "Period": "300",
-        "EvaluationPeriods": "1",
+        "EvaluationPeriods": "3",
         "Threshold": "80",
         "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
         "Dimensions": [
@@ -1607,7 +1607,7 @@
         "Namespace": "System/Linux",
         "Statistic": "Average",
         "Period": "300",
-        "EvaluationPeriods": "1",
+        "EvaluationPeriods": "3",
         "Threshold": "50",
         "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
         "Dimensions": [
@@ -1687,7 +1687,7 @@
         "Namespace": "System/Linux",
         "Statistic": "Average",
         "Period": "300",
-        "EvaluationPeriods": "1",
+        "EvaluationPeriods": "3",
         "Threshold": "80",
         "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
         "Dimensions": [
@@ -1715,7 +1715,7 @@
         "Namespace": "System/Linux",
         "Statistic": "Average",
         "Period": "300",
-        "EvaluationPeriods": "1",
+        "EvaluationPeriods": "3",
         "Threshold": "80",
         "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
         "Dimensions": [
@@ -1735,7 +1735,7 @@
         "Namespace": "System/Linux",
         "Statistic": "Average",
         "Period": "300",
-        "EvaluationPeriods": "1",
+        "EvaluationPeriods": "3",
         "Threshold": "50",
         "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
         "Dimensions": [
@@ -1816,7 +1816,7 @@
         "Namespace": "System/Linux",
         "Statistic": "Average",
         "Period": "300",
-        "EvaluationPeriods": "1",
+        "EvaluationPeriods": "3",
         "Threshold": "80",
         "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
         "Dimensions": [
@@ -1844,7 +1844,7 @@
         "Namespace": "System/Linux",
         "Statistic": "Average",
         "Period": "300",
-        "EvaluationPeriods": "1",
+        "EvaluationPeriods": "3",
         "Threshold": "80",
         "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
         "Dimensions": [
@@ -1864,7 +1864,7 @@
         "Namespace": "System/Linux",
         "Statistic": "Average",
         "Period": "300",
-        "EvaluationPeriods": "1",
+        "EvaluationPeriods": "3",
         "Threshold": "50",
         "AlarmActions": [ { "Ref": "SplunkSNSNotificationsARN" } ],
         "Dimensions": [
